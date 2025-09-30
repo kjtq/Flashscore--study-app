@@ -7,7 +7,7 @@ from typing import List
 app = FastAPI()
 
 # --- CORS configuration ---
-origins = ["http://localhost:3000"]  # Your frontend URL
+origins = ["http://localhost:3000"]  # Your fron
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,7 +18,7 @@ app.add_middleware(
 )
 
 
-# --- Health route ---
+# --- Health route --
 @app.get("/health")
 async def health():
     return {"status": "ok"}
