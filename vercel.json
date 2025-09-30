@@ -1,46 +1,27 @@
-
 {
-  "version": 2,
-  "name": "magajico-app",
-  "buildCommand": "cd apps/frontend && npm run build",
-  "outputDirectory": "apps/frontend/.next",
+  "buildCommand": "cd apps/frontend && npm install && npm run build",
   "installCommand": "npm install",
   "framework": "nextjs",
+  "rootDirectory": "apps/frontend",
+  "env": {
+    "NODE_ENV": "production",
+    "NEXTAUTH_URL": "https://your-vercel-app-name.vercel.app",
+    "NEXT_PUBLIC_BACKEND_URL": "https://your-backend-replit-url.replit.app"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
   "functions": {
-    "apps/backend/src/main.ts": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 30
+    "apps/frontend/src/app/api/**": {
+      "runtime": "nodejs18.x"
     }
   },
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/backend/$1"
+      "source": "/api/backend/(.*)",
+      "destination": "https://your-backend-replit-url.replit.app/api/$1"
     }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        }
-      ]
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "MONGODB_URI": "@mongodb_uri",
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "NEXTAUTH_URL": "https://flashscore-study-app.vercel.app"
-  }
+  ]
 }
