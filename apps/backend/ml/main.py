@@ -1,18 +1,36 @@
-
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from models.sample_model import predict
+from typing import List
 
-app = FastAPI(title="Prediction Service")
+# --- Initialize FastAPI app ---
+app = FastAPI()
 
-class InputData(BaseModel):
-    features: list
+# --- CORS configuration ---
+origins = ["http://localhost:3000"]  # Your frontend URL
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# --- Health route ---
 @app.get("/health")
-def health():
+async def health():
     return {"status": "ok"}
 
+
+# --- Prediction model ---
+class PredictRequest(BaseModel):
+    features: List[float]
+
+
 @app.post("/predict")
-def make_prediction(data: InputData):
-    prediction = predict(data.features)
+async def predict(request: PredictRequest):
+    features = request.features
+    prediction = sum(features) / len(features) if features else 0
     return {"prediction": prediction}
