@@ -10,10 +10,13 @@ import PredictionLeague from "./components/PredictionLeague";
 import SocialHub from "./components/SocialHub";
 import MobileAdvancedFeatures from "./components/MobileAdvancedFeatures";
 import AdvancedAnalytics from "./components/AdvancedAnalytics";
+import OptimizedDashboard from "./components/OptimizedDashboard";
+import PerformanceOptimizer from "./components/PerformanceOptimizer";
 
 export default function HomePage() {
   const [backendStatus, setBackendStatus] = useState("checking...");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [useOptimizedView, setUseOptimizedView] = useState(false);
 
   useEffect(() => {
     // Smooth loading animation
@@ -39,7 +42,7 @@ export default function HomePage() {
       <div className="relative z-10 p-6">
         {/* Enhanced Header */}
         <header className="text-center mb-12 animate-slide-in-elegant">
-          <div className="inline-block p-6 rounded-3xl glass-card mb-6">
+          <div className="inline-block p-6 rounded-3xl glass-card mb-6 relative">
             <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
               ⚽ MagajiCo
             </h1>
@@ -47,121 +50,164 @@ export default function HomePage() {
               Smart Football Predictions Platform
             </p>
             <div className="w-24 h-1 bg-gradient-to-r from-green-400 to-blue-500 mx-auto mt-4 rounded-full"></div>
+            
+            {/* Dashboard View Toggle */}
+            <div className="absolute top-4 right-4">
+              <button
+                onClick={() => setUseOptimizedView(!useOptimizedView)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 ${
+                  useOptimizedView 
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                    : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                }`}
+              >
+                {useOptimizedView ? '⚡ Optimized' : '📊 Standard'}
+              </button>
+            </div>
           </div>
         </header>
 
-        {/* Enhanced Grid Layout */}
-        <div className="max-w-7xl mx-auto grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {/* System Status Card */}
-          <div className="glass-card p-8 hover-lift group">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl">
-                🖥️
-              </div>
-              <h2 className="text-2xl font-bold">System Status</h2>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                <span className="text-gray-300">Backend:</span>
-                <span
-                  className={`font-semibold ${backendStatus.includes("✅") ? "text-green-400" : "text-red-400"}`}
-                >
-                  {backendStatus}
-                </span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                <span className="text-gray-300">Frontend:</span>
-                <span className="text-green-400 font-semibold">✅ Running</span>
-              </div>
-            </div>
+        {/* Conditional Dashboard Rendering */}
+        {useOptimizedView ? (
+          <div className="space-y-6">
+            <OptimizedDashboard />
+            <PerformanceOptimizer />
           </div>
-
-          {/* Quick Actions Card */}
-          <div className="glass-card p-8 hover-lift group">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-500 rounded-2xl flex items-center justify-center text-2xl">
-                ⚡
+        ) : (
+        /* Performance Optimized Dashboard Grid */
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Key Metrics Row - Above the fold content */}
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+            {/* System Status Card - Optimized */}
+            <div className="glass-card p-6 hover-lift group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-xl">
+                  🖥️
+                </div>
+                <h2 className="text-xl font-bold">System Health</h2>
               </div>
-              <h2 className="text-2xl font-bold">Quick Actions</h2>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                  <span className="text-gray-300 text-sm">Backend</span>
+                  <span
+                    className={`font-semibold text-sm ${backendStatus.includes("✅") ? "text-green-400" : "text-red-400"}`}
+                  >
+                    {backendStatus}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                  <span className="text-gray-300 text-sm">Frontend</span>
+                  <span className="text-green-400 font-semibold text-sm">✅ Active</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                  <span className="text-gray-300 text-sm">AI Engine</span>
+                  <span className="text-blue-400 font-semibold text-sm">🤖 Learning</span>
+                </div>
+              </div>
             </div>
-            <div className="space-y-4">
-              <button className="w-full ios-button bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-300">
-                <span className="flex items-center justify-center gap-2">
+
+            {/* Quick Stats */}
+            <div className="glass-card p-6 hover-lift group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-xl">
+                  📊
+                </div>
+                <h2 className="text-xl font-bold">Today's Stats</h2>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-300 text-sm">Predictions</span>
+                  <span className="text-green-400 font-bold">127</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-300 text-sm">Accuracy</span>
+                  <span className="text-blue-400 font-bold">78.5%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-300 text-sm">Active Users</span>
+                  <span className="text-purple-400 font-bold">2.3K</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions - Streamlined */}
+            <div className="glass-card p-6 hover-lift group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-xl">
+                  ⚡
+                </div>
+                <h2 className="text-xl font-bold">Quick Actions</h2>
+              </div>
+              <div className="space-y-3">
+                <button className="w-full ios-button bg-gradient-to-r from-blue-600 to-blue-700 py-2 text-sm">
                   🔮 View Predictions
-                </span>
-              </button>
-              <button className="w-full ios-button bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transform hover:scale-105 transition-all duration-300">
-                <span className="flex items-center justify-center gap-2">
-                  🧪 Test Backend
-                </span>
-              </button>
+                </button>
+                <button className="w-full ios-button bg-gradient-to-r from-green-600 to-green-700 py-2 text-sm">
+                  💰 Pi Wallet
+                </button>
+                <button className="w-full ios-button bg-gradient-to-r from-purple-600 to-purple-700 py-2 text-sm">
+                  🏆 Leaderboard
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Advanced UX Features */}
-          <div className="md:col-span-2 lg:col-span-3">
+          {/* Main Content Grid - Lazy loaded */}
+          <div className="grid gap-8 grid-cols-1 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-6">
+              <PredictionsPreview />
+              <PredictionPreview />
+            </div>
+            <div className="space-y-6">
+              <PreviewManager />
+              
+              {/* Enhanced Features Card */}
+              <div className="glass-card p-6 hover-lift group">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-xl">
+                    ✨
+                  </div>
+                  <h2 className="text-xl font-bold">Platform Features</h2>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
+                    <span className="text-blue-400 text-lg">🤖</span>
+                    <div className="flex-1">
+                      <div className="text-white font-medium text-sm">AI Predictions</div>
+                      <div className="text-gray-400 text-xs">Machine learning powered</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
+                    <span className="text-green-400 text-lg">💰</span>
+                    <div className="flex-1">
+                      <div className="text-white font-medium text-sm">Pi Coin Rewards</div>
+                      <div className="text-gray-400 text-xs">Earn while you predict</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
+                    <span className="text-purple-400 text-lg">🧠</span>
+                    <div className="flex-1">
+                      <div className="text-white font-medium text-sm">Sports Quizzes</div>
+                      <div className="text-gray-400 text-xs">Test your knowledge</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Advanced Features - Lazy loaded section */}
+          <div className="space-y-6">
             <SmartPersonalization />
-            <PredictionLeague />
-            <SocialHub />
+            <div className="grid gap-6 grid-cols-1 xl:grid-cols-2">
+              <PredictionLeague />
+              <SocialHub />
+            </div>
             <AdvancedAnalytics />
             <MobileAdvancedFeatures />
           </div>
-
-          {/* Features Preview Card */}
-          <div className="glass-card p-8 hover-lift group md:col-span-2 lg:col-span-1">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-2xl">
-                ✨
-              </div>
-              <h2 className="text-2xl font-bold">Features</h2>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
-                <span className="text-blue-400">🤖</span>
-                <span>AI Predictions</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
-                <span className="text-green-400">💰</span>
-                <span>Pi Coin Rewards</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
-                <span className="text-purple-400">🧠</span>
-                <span>Sports Quizzes</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Welcome Section */}
-          <div className="glass-card p-8 hover-lift group md:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center text-2xl">
-                🏆
-              </div>
-              <h2 className="text-2xl font-bold">Welcome to MagajiCo</h2>
-            </div>
-            <p className="text-lg text-gray-300 leading-relaxed">
-              Experience the future of sports predictions with our advanced
-              AI-powered platform. Get real-time predictions, earn Pi coins, and
-              join a community of passionate sports enthusiasts.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <span className="px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full text-sm font-medium border border-blue-500/30">
-                Real-time Data
-              </span>
-              <span className="px-4 py-2 bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-full text-sm font-medium border border-green-500/30">
-                AI Powered
-              </span>
-              <span className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full text-sm font-medium border border-purple-500/30">
-                Community Driven
-              </span>
-            </div>
-          </div>
-
-          {/* New Preview Components */}
-          <PreviewManager />
-          <PredictionPreview />
-          <PredictionsPreview />
         </div>
+        )}  {/* End conditional rendering */}
 
         {/* Enhanced Footer */}
         <footer className="text-center mt-16 opacity-80">

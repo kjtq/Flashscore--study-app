@@ -539,3 +539,142 @@ const PredictionPreview: React.FC<PredictionPreviewProps> = ({ prediction }) => 
 };
 
 export default PredictionPreview;
+"use client";
+import React, { useState } from 'react';
+
+interface Prediction {
+  id: string;
+  match: string;
+  prediction: string;
+  confidence: number;
+  sport: string;
+  odds: string;
+  aiScore: number;
+  reasoning?: string;
+  riskLevel: 'Low' | 'Medium' | 'High';
+}
+
+const PredictionPreview: React.FC = () => {
+  const [selectedPrediction, setSelectedPrediction] = useState<Prediction | null>(null);
+  const [predictions] = useState<Prediction[]>([
+    {
+      id: '1',
+      match: 'Lakers vs Warriors',
+      prediction: 'Lakers Win',
+      confidence: 87,
+      sport: 'NBA',
+      odds: '1.8',
+      aiScore: 0.94,
+      reasoning: 'Strong home advantage and recent form',
+      riskLevel: 'Low'
+    },
+    {
+      id: '2',
+      match: 'Chelsea vs Arsenal',
+      prediction: 'Over 2.5 Goals',
+      confidence: 73,
+      sport: 'Football',
+      odds: '2.1',
+      aiScore: 0.78,
+      reasoning: 'Both teams averaging high scoring games',
+      riskLevel: 'Medium'
+    }
+  ]);
+
+  return (
+    <div className="glass-card p-6 hover-lift">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center text-2xl">
+          🎯
+        </div>
+        <h2 className="text-2xl font-bold text-white">AI Prediction Preview</h2>
+      </div>
+
+      <div className="grid gap-4">
+        {predictions.map(pred => (
+          <div
+            key={pred.id}
+            onClick={() => setSelectedPrediction(pred)}
+            className="p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 cursor-pointer transition-all duration-300"
+          >
+            <div className="flex justify-between items-start mb-3">
+              <h3 className="text-lg font-semibold text-white">{pred.match}</h3>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                pred.riskLevel === 'Low' ? 'bg-green-500/20 text-green-400' :
+                pred.riskLevel === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                'bg-red-500/20 text-red-400'
+              }`}>
+                {pred.riskLevel} Risk
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-green-400 font-medium">{pred.prediction}</span>
+              <span className="text-blue-400 font-bold">Odds: {pred.odds}</span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="w-full bg-white/20 rounded-full h-2 max-w-[100px]">
+                  <div 
+                    className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
+                    style={{ width: `${pred.confidence}%` }}
+                  />
+                </div>
+                <span className="text-sm text-gray-300">{pred.confidence}%</span>
+              </div>
+              <span className="text-xs text-purple-400">AI Score: {pred.aiScore}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {selectedPrediction && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-2xl p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-white">Prediction Details</h3>
+              <button
+                onClick={() => setSelectedPrediction(null)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-green-400 font-semibold">{selectedPrediction.match}</h4>
+                <p className="text-white text-lg">{selectedPrediction.prediction}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-gray-400 text-sm">Confidence</span>
+                  <p className="text-white font-bold">{selectedPrediction.confidence}%</p>
+                </div>
+                <div>
+                  <span className="text-gray-400 text-sm">AI Score</span>
+                  <p className="text-white font-bold">{selectedPrediction.aiScore}</p>
+                </div>
+              </div>
+              
+              {selectedPrediction.reasoning && (
+                <div>
+                  <span className="text-gray-400 text-sm">AI Reasoning</span>
+                  <p className="text-white">{selectedPrediction.reasoning}</p>
+                </div>
+              )}
+              
+              <button className="w-full ios-button bg-gradient-to-r from-green-600 to-green-700">
+                Follow This Prediction
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PredictionPreview;

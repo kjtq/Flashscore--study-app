@@ -1,150 +1,204 @@
+
 "use client";
 
 import React, { useState } from "react";
-import PredictionPreview from "./PredictionPreview";
+
+interface Prediction {
+  id: string;
+  match: string;
+  prediction: string;
+  confidence: number;
+  sport: string;
+  odds: string;
+  aiScore: number;
+  status: 'pending' | 'won' | 'lost';
+  timestamp: Date;
+}
 
 const PredictionsPreview: React.FC = () => {
   const [viewMode, setViewMode] = useState<"list" | "preview">("list");
-  const [selectedPrediction, setSelectedPrediction] = useState<any>(null);
-
-  // Mock data for preview
-  const predictions = [
+  const [predictions] = useState<Prediction[]>([
     {
-      id: 1,
-      match: "Team A vs Team B",
-      prediction: "Team A Win",
-      confidence: 85,
-      sport: "Football",
+      id: '1',
+      match: "Lakers vs Warriors",
+      prediction: "Lakers Win",
+      confidence: 87,
+      sport: "NBA",
       odds: "1.8",
-      status: "pending" as const,
-      aiScore: 92.1,
-      analysis: "Team A shows dominant home form with 85% win rate",
-      riskLevel: "low" as const,
-      expectedValue: 1.53,
-      title: "Team A vs Team B - Prediction Analysis",
+      aiScore: 0.94,
+      status: 'pending',
+      timestamp: new Date()
     },
     {
-      id: 2,
-      match: "Team C vs Team D",
-      prediction: "Draw",
-      confidence: 72,
-      sport: "Football",
-      odds: "3.2",
-      status: "pending" as const,
-      aiScore: 78.4,
-      analysis: "Both teams show equal recent form making draw most likely",
-      riskLevel: "medium" as const,
-      expectedValue: 2.31,
-      title: "Team C vs Team D - Draw Analysis",
-    },
-    {
-      id: 3,
-      "use client";
-import React, { useState } from "react";
-import PredictionPreview from "./PredictionPreview";
-
-const PredictionsPreview: React.FC = () => {
-  const [viewMode, setViewMode] = useState<"list" | "preview">("list");
-  
-  const samplePredictions = [
-    {
+      id: '2',
       match: "Team E vs Team F",
       prediction: "Team F Win",
       confidence: 90,
       sport: "Football",
       odds: "2.1",
-      status: "correct" as const,
-      aiScore: 95.7,
-      analysis: "Team F superior attacking stats and key player availability",
-      riskLevel: "low" as const,
-      expectedValue: 1.89,
-      title: "Team E vs Team F - Away Win Prediction",
+      aiScore: 0.91,
+      status: 'won',
+      timestamp: new Date()
     },
-  ];
+    {
+      id: '3',
+      match: "Team G vs Team H",
+      prediction: "Over 2.5 Goals",
+      confidence: 75,
+      sport: "Football",
+      odds: "1.9",
+      aiScore: 0.82,
+      status: 'lost',
+      timestamp: new Date()
+    }
+  ]);
 
-  const handlePredictionClick = (prediction: any) => {
-    setSelectedPrediction(prediction);
-    setViewMode("preview");
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'won': return 'text-green-400 bg-green-500/20';
+      case 'lost': return 'text-red-400 bg-red-500/20';
+      default: return 'text-yellow-400 bg-yellow-500/20';
+    }
   };
 
-  if (viewMode === "preview" && selectedPrediction) {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'won': return '✅';
+      case 'lost': return '❌';
+      default: return '⏳';
+    }
+  };
+
+  if (viewMode === "preview") {
     return (
-      <div className="space-y-4">
-        <button
-          onClick={() => setViewMode("list")}
-          className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-2"
-        >
-          ← Back to List
-        </button>
-        <PredictionPreview
-          prediction={selectedPrediction}
-          showFullAnalysis={true}
-        />
+      <div className="glass-card p-6 hover-lift">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center text-2xl">
+              🔮
+            </div>
+            <h2 className="text-2xl font-bold text-white">Predictions Overview</h2>
+          </div>
+          <button
+            onClick={() => setViewMode("list")}
+            className="ios-button bg-gradient-to-r from-blue-600 to-blue-700"
+          >
+            📋 List View
+          </button>
+        </div>
+
+        <div className="grid gap-4">
+          {predictions.slice(0, 3).map(pred => (
+            <div
+              key={pred.id}
+              className="p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all duration-300"
+            >
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="text-lg font-semibold text-white">{pred.match}</h3>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(pred.status)}`}>
+                  {getStatusIcon(pred.status)} {pred.status.toUpperCase()}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-emerald-400 font-medium">{pred.prediction}</span>
+                <span className="text-blue-400 font-bold">Odds: {pred.odds}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-full bg-white/20 rounded-full h-2 max-w-[100px]">
+                    <div 
+                      className="bg-gradient-to-r from-emerald-400 to-teal-500 h-2 rounded-full"
+                      style={{ width: `${pred.confidence}%` }}
+                    />
+                  </div>
+                  <span className="text-sm text-gray-300">{pred.confidence}% confidence</span>
+                </div>
+                <span className="text-xs text-purple-400">AI: {pred.aiScore}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 text-center">
+          <button className="ios-button bg-gradient-to-r from-emerald-600 to-teal-700">
+            🔍 View All Predictions
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Latest Predictions</h3>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setViewMode("list")}
-            className={`px-3 py-1 text-xs rounded ${viewMode === "list" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-          >
-            List
-          </button>
-          <button
-            onClick={() => setViewMode("preview")}
-            className={`px-3 py-1 text-xs rounded ${viewMode === "preview" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-          >
-            Preview
-          </button>
+    <div className="glass-card p-6 hover-lift">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center text-2xl">
+            📊
+          </div>
+          <h2 className="text-2xl font-bold text-white">Recent Predictions</h2>
+        </div>
+        <button
+          onClick={() => setViewMode("preview")}
+          className="ios-button bg-gradient-to-r from-purple-600 to-purple-700"
+        >
+          🔮 Preview Mode
+        </button>
+      </div>
+
+      {/* Statistics Bar */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="text-center p-3 bg-green-500/10 rounded-xl border border-green-500/20">
+          <div className="text-green-400 text-2xl font-bold">
+            {predictions.filter(p => p.status === 'won').length}
+          </div>
+          <div className="text-green-300 text-sm">Won</div>
+        </div>
+        <div className="text-center p-3 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
+          <div className="text-yellow-400 text-2xl font-bold">
+            {predictions.filter(p => p.status === 'pending').length}
+          </div>
+          <div className="text-yellow-300 text-sm">Pending</div>
+        </div>
+        <div className="text-center p-3 bg-red-500/10 rounded-xl border border-red-500/20">
+          <div className="text-red-400 text-2xl font-bold">
+            {predictions.filter(p => p.status === 'lost').length}
+          </div>
+          <div className="text-red-300 text-sm">Lost</div>
         </div>
       </div>
 
-      {viewMode === "preview" && !selectedPrediction ? (
-        <PredictionPreview showFullAnalysis={false} />
-      ) : (
-        <div className="space-y-3">
-          {predictions.map((pred) => (
-            <div
-              key={pred.id}
-              className="flex justify-between items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => handlePredictionClick(pred)}
-            >
-              <div>
-                <p className="font-medium text-sm">{pred.match}</p>
-                <p className="text-xs text-gray-600">{pred.prediction}</p>
-                <div className="flex gap-2 mt-1">
-                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-                    {pred.sport}
-                  </span>
-                  <span
-                    className={`text-xs px-2 py-1 rounded ${
-                      pred.status === "correct"
-                        ? "bg-green-100 text-green-800"
-                        : pred.status === "incorrect"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
-                    }`}
-                  >
-                    {pred.status}
-                  </span>
-                </div>
+      {/* Predictions List */}
+      <div className="space-y-3">
+        {predictions.map(pred => (
+          <div
+            key={pred.id}
+            className="p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-pointer"
+          >
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-blue-400 font-medium">{pred.sport}</span>
+                <h4 className="text-white font-semibold">{pred.match}</h4>
               </div>
-              <div className="text-right">
-                <p className="text-xs font-medium text-green-600">
-                  {pred.confidence}% confidence
-                </p>
-                <p className="text-xs text-gray-500">AI: {pred.aiScore}</p>
-                <p className="text-xs text-blue-600">Click to preview →</p>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(pred.status)}`}>
+                {getStatusIcon(pred.status)} {pred.status}
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <span className="text-emerald-400">{pred.prediction}</span>
+                <span className="text-gray-400 text-sm">{pred.confidence}% confidence</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-blue-400 text-sm">Odds: {pred.odds}</span>
+                <span className="text-purple-400 text-xs">AI: {pred.aiScore}</span>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
