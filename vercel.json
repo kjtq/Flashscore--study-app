@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm install --prefix apps/frontend && cd apps/frontend && npm run build",
-  "installCommand": "npm install --prefix apps/frontend",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
   "framework": "nextjs",
   "env": {
     "NODE_ENV": "production",
