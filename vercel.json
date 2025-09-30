@@ -6,7 +6,7 @@
   "env": {
     "NODE_ENV": "production",
     "NEXTAUTH_URL": "https://your-vercel-app-name.vercel.app",
-    "NEXT_PUBLIC_BACKEND_URL": "https://your-backend-replit-url.replit.app"
+    "NEXT_PUBLIC_BACKEND_URL": "https://flashstudy-ri0g.onrender.com"
   },
   "build": {
     "env": {
@@ -21,7 +21,7 @@
   "rewrites": [
     {
       "source": "/api/backend/(.*)",
-      "destination": "https://your-backend-replit-url.replit.app/api/$1"
+      "destination": "https://flashstudy-ri0g.onrender.com"
     }
   ]
 }
