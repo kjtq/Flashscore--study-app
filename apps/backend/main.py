@@ -4,7 +4,7 @@ from ml.magajico_predictor import MagajiCoMLPredictor
 
 app = FastAPI(title="MagajiCo ML Prediction API")
 
-# Load model once at startup
+# Load model once when server starts
 predictor = MagajiCoMLPredictor()
 
 class PredictionInput(BaseModel):
