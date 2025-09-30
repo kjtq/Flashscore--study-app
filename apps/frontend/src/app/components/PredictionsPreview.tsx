@@ -39,6 +39,15 @@ const PredictionsPreview: React.FC = () => {
     },
     {
       id: 3,
+      "use client";
+import React, { useState } from "react";
+import PredictionPreview from "./PredictionPreview";
+
+const PredictionsPreview: React.FC = () => {
+  const [viewMode, setViewMode] = useState<"list" | "preview">("list");
+  
+  const samplePredictions = [
+    {
       match: "Team E vs Team F",
       prediction: "Team F Win",
       confidence: 90,

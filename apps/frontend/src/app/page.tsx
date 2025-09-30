@@ -5,6 +5,11 @@ import MagajiCoManager from "./components/MagajiCoManager";
 import PredictionsPreview from "./components/PredictionsPreview";
 import PredictionPreview from "./components/PredictionPreview";
 import PreviewManager from "./components/PreviewManager";
+import SmartPersonalization from "./components/SmartPersonalization";
+import PredictionLeague from "./components/PredictionLeague";
+import SocialHub from "./components/SocialHub";
+import MobileAdvancedFeatures from "./components/MobileAdvancedFeatures";
+import AdvancedAnalytics from "./components/AdvancedAnalytics";
 
 export default function HomePage() {
   const [backendStatus, setBackendStatus] = useState("checking...");
@@ -91,6 +96,15 @@ export default function HomePage() {
                 </span>
               </button>
             </div>
+          </div>
+
+          {/* Advanced UX Features */}
+          <div className="md:col-span-2 lg:col-span-3">
+            <SmartPersonalization />
+            <PredictionLeague />
+            <SocialHub />
+            <AdvancedAnalytics />
+            <MobileAdvancedFeatures />
           </div>
 
           {/* Features Preview Card */}

@@ -489,3 +489,53 @@ const PredictionPreview: React.FC<PredictionPreviewProps> = ({
 };
 
 export default PredictionPreview;
+"use client";
+import React from 'react';
+
+interface PredictionPreviewProps {
+  prediction?: {
+    match: string;
+    prediction: string;
+    confidence: number;
+    sport: string;
+    odds: string;
+    aiScore: number;
+  };
+}
+
+const PredictionPreview: React.FC<PredictionPreviewProps> = ({ prediction }) => {
+  const defaultPrediction = {
+    match: "Sample Match",
+    prediction: "Team A Win",
+    confidence: 75,
+    sport: "Football",
+    odds: "2.1",
+    aiScore: 8.5
+  };
+
+  const pred = prediction || defaultPrediction;
+
+  return (
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.1)',
+      borderRadius: '12px',
+      padding: '16px',
+      border: '1px solid rgba(255, 255, 255, 0.2)'
+    }}>
+      <h3 style={{ color: '#22c55e', marginBottom: '8px' }}>
+        {pred.match}
+      </h3>
+      <p style={{ color: '#fff', marginBottom: '4px' }}>
+        Prediction: {pred.prediction}
+      </p>
+      <p style={{ color: '#d1fae5', fontSize: '0.9rem' }}>
+        {pred.confidence}% confidence
+      </p>
+      <p style={{ color: '#9ca3af', fontSize: '0.8rem' }}>
+        AI Score: {pred.aiScore}
+      </p>
+    </div>
+  );
+};
+
+export default PredictionPreview;
