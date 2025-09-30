@@ -15,7 +15,7 @@ import ProductionErrorBoundary from "./components/ProductionErrorBoundary";
 import PrivacyNotice from "./components/PrivacyNotice";
 import MobileInstallPrompter from "./components/MobileInstallPrompter";
 import PWAServiceWorker from "./components/PWAServiceWorker";
-import iOSInterface from "./components/iOSInterface";
+// import iOSInterface from "./components/iOSInterface"; // Removed due to DOM prop warnings
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -57,31 +57,30 @@ export default function RootLayout({
       <body className="relative flex sports">
         <NextAuthSessionProvider>
           <ProductionErrorBoundary>
-            <iOSInterface showStatusBar={true} enableHapticFeedback={true}>
+            {/* iOS interface removed to fix DOM prop warnings */}
+            <React.Suspense fallback={null}>
+              <BackgroundParticles />
+            </React.Suspense>
+
+            <OfflineManager>
+              {/* Sidebar for desktop */}
               <React.Suspense fallback={null}>
-                <BackgroundParticles />
+                <SidebarNav items={navItems} />
               </React.Suspense>
 
-              <OfflineManager>
-                {/* Sidebar for desktop */}
+              {/* Main content area */}
+              <div className="flex-1 min-h-screen flex flex-col">
+                {children}
+
+                {/* Mobile nav (always visible at bottom on small screens) */}
                 <React.Suspense fallback={null}>
-                  <SidebarNav items={navItems} />
+                  <MobileNav items={navItems} />
                 </React.Suspense>
+              </div>
+            </OfflineManager>
 
-                {/* Main content area */}
-                <div className="flex-1 min-h-screen flex flex-col">
-                  {children}
-
-                  {/* Mobile nav (always visible at bottom on small screens) */}
-                  <React.Suspense fallback={null}>
-                    <MobileNav items={navItems} />
-                  </React.Suspense>
-                </div>
-              </OfflineManager>
-
-              <MobileInstallPrompter />
-              <PWAServiceWorker />
-            </iOSInterface>
+            <MobileInstallPrompter />
+            <PWAServiceWorker />
           </ProductionErrorBoundary>
         </NextAuthSessionProvider>
         <PrivacyNotice />

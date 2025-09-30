@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import PredictionPreview from "./PredictionPreview";
+import PredictionsPreview from "./PredictionsPreview";
 
 interface PreviewItem {
   id: string;
@@ -100,7 +100,7 @@ const PreviewManager: React.FC = () => {
           onClick={() => setActivePreview(preview)}
           style={{ cursor: "pointer" }}
         >
-          <PredictionPreview prediction={preview.content} compact={true} />
+          <PredictionsPreview prediction={preview.content} compact={true} />
         </div>
       ))}
     </div>
@@ -122,7 +122,7 @@ const PreviewManager: React.FC = () => {
           style={{ minWidth: "350px", flex: "0 0 auto" }}
           onClick={() => setActivePreview(preview)}
         >
-          <PredictionPreview prediction={preview.content} compact={false} />
+          <PredictionsPreview prediction={preview.content} compact={false} />
         </div>
       ))}
     </div>
@@ -131,7 +131,7 @@ const PreviewManager: React.FC = () => {
   const renderSingleView = () => (
     <div>
       {activePreview && (
-        <PredictionPreview
+        <PredictionsPreview
           prediction={activePreview.content}
           showFullAnalysis={true}
         />
