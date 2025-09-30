@@ -16,7 +16,7 @@ const nextConfig = {
 
   async rewrites() {
     // For Vercel deployment, use Replit backend
-    const backendUrl = process.env.NODE_ENV === 'production' 
+    const backendUrl = process.env.NODE_ENV === 'production'
       ? process.env.NEXT_PUBLIC_BACKEND_URL || 'https://your-backend-name.replit.app'
       : 'http://localhost:8000';
 

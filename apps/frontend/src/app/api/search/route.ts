@@ -1,8 +1,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import PredictionController from '@controllers/predictionController';
-import AuthorController from '@controllers/authorController';
-import { NewsService } from '@services/newsService';
+import PredictionController from '../../controllers/predictionController.js';
+import AuthorController from '../../controllers/authorController.js';
+import { NewsService } from '../../services/newsService';
 
 const predictionController = new PredictionController();
 const authorController = new AuthorController();
