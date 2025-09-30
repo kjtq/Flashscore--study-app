@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import PaymentManager from '../../../../../../packages/shared/src/libs/utils/paymentManager';
+import PaymentManager from '@shared/utils/paymentManager';
 
 export async function POST(request: NextRequest) {
   try {
