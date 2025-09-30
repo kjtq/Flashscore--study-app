@@ -1,8 +1,7 @@
 {
-  "buildCommand": "cd apps/frontend && npm install && npm run build",
+  "buildCommand": "npm install && npm run build",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "rootDirectory": "apps/frontend",
   "env": {
     "NODE_ENV": "production",
     "NEXTAUTH_URL": "https://your-vercel-app-name.vercel.app",
@@ -14,14 +13,14 @@
     }
   },
   "functions": {
-    "apps/frontend/src/app/api/**": {
+    "src/app/api/**": {
       "runtime": "nodejs18.x"
     }
   },
   "rewrites": [
     {
       "source": "/api/backend/(.*)",
-      "destination": "https://flashstudy-ri0g.onrender.com"
+      "destination": "https://flashstudy-ri0g.onrender.com/$1"
     }
   ]
 }
