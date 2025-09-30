@@ -9,15 +9,13 @@ const express = spawn("npm", ["run", "dev"], { cwd: backendSrc, shell: true });
 express.stdout.on("data", (data) => process.stdout.write(`[Express] ${data}`));
 express.stderr.on("data", (data) => process.stderr.write(`[Express] ${data}`));
 
-// Start FastAPI
-// Windows uses 'venv\\Scripts\\activate && uvicorn main:app --reload --port 8000'
-// Linux/macOS uses 'source venv/bin/activate && uvicorn main:app --reload --port 8000'
+// Start FastAPI using Python from venv directly
 const isWin = process.platform === "win32";
-const activateCmd = isWin
-  ? `${path.join(backendML, "venv/Scripts/activate")} && uvicorn main:app --reload --port 8000`
-  : `source ${path.join(backendML, "venv/bin/activate")} && uvicorn main:app --reload --port 8000`;
+const pythonExec = isWin
+  ? path.join(backendML, "venv", "Scripts", "python.exe")
+  : path.join(backendML, "venv", "bin", "python");
 
-const fastapi = spawn(activateCmd, { cwd: backendML, shell: true });
+const fastapi = spawn(pythonExec, ["-m", "uvicorn", "main:app", "--reload", "--port", "8000"], { cwd: backendML, shell: true });
 fastapi.stdout.on("data", (data) => process.stdout.write(`[FastAPI] ${data}`));
 fastapi.stderr.on("data", (data) => process.stderr.write(`[FastAPI] ${data}`));
 
