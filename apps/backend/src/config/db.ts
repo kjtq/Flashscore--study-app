@@ -1,312 +1,173 @@
-// backend/config/database.js - Hybrid approach supporting both X.509 and standard auth
+// apps/backend/src/config/db.ts
+import mongoose, { ConnectOptions } from 'mongoose';
 
-import mongoose from "mongoose";
-import fs from "fs";
-import path from "path";
+// Extended database interface with connection tracking
+interface MagajicoDatabase extends typeof mongoose {
+  isConnected?: number;
+  connectionType?: 'primary' | 'replica' | 'local';
+}
 
-class MagajicoDatabase {
-  constructor() {
-    this.isConnected = false;
-    this.connectionType = null;
-    this.setupEventHandlers();
+const db = mongoose as MagajicoDatabase;
+
+export const connectDB = async (): Promise<void> => {
+  // If already connected, return
+  if (db.isConnected === 1) {
+    console.log('✅ Already connected to database');
+    console.log(`📊 Connection type: ${db.connectionType || 'unknown'}`);
+    return;
   }
 
-  async connectDB() {
-    try {
-      console.log('🔄 Initializing MagajiCo database connection...');
-      
-      // Try X.509 certificate connection first (production)
-      if (await this.tryX509Connection()) {
-        this.connectionType = 'X.509 Certificate';
-        console.log(`✅ Connected via X.509 Certificate: ${mongoose.connection.name}`);
-        return;
-      }
-      
-      // Fallback to standard connection (development/alternative)
-      if (await this.tryStandardConnection()) {
-        this.connectionType = 'Standard Authentication';
-        console.log(`✅ Connected via Standard Auth: ${mongoose.connection.name}`);
-        return;
-      }
-      
-      // Fallback to local development
-      if (await this.tryLocalConnection()) {
-        this.connectionType = 'Local Development';
-        console.log(`✅ Connected to Local MongoDB: ${mongoose.connection.name}`);
-        return;
-      }
-      
-      throw new Error('All connection methods failed');
-      
-    } catch (err) {
-      console.error("❌ All MongoDB connection attempts failed:", err.message);
-      
-      if (process.env.NODE_ENV === 'production') {
-        console.error("🚨 Production environment requires database connection!");
-        process.exit(1);
-      } else {
-        console.log("Mongo URI loaded:", process.env.MONGODB_URI ? "✅ Yes" : "❌ No");
-      }
+  try {
+    const MONGODB_URI = process.env.MONGODB_URI;
+    
+    if (!MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined in environment variables');
     }
-  }
 
-  async tryX509Connection() {
-    try {
-      // Check if X.509 configuration exists
-      const certPath = process.env.MONGODB_CERT_PATH || "./certs/mongodb-cert.pem";
-      const atlasUri = process.env.MONGODB_X509_URI || 
-        "mongodb+srv://clustermagaji.deweqyx.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&appName=ClusterMagaji";
-      
-      // Verify certificate file exists
-      if (!fs.existsSync(certPath)) {
-        console.log('📄 X.509 certificate not found, skipping X.509 connection');
-        return false;
-      }
-      
-      console.log('🔐 Attempting X.509 certificate connection...');
-      
-      const clientOptions = {
-        tlsCertificateKeyFile: certPath,
-        serverApi: { version: '1', strict: true, deprecationErrors: true },
-        maxPoolSize: 10,
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
-        bufferMaxEntries: 0,
-        bufferCommands: false,
+    console.log('🔄 Connecting to MongoDB...');
+    
+    // Determine connection type
+    if (MONGODB_URI.includes('mongodb+srv')) {
+      db.connectionType = 'primary';
+      console.log('📡 Using MongoDB Atlas (Primary)');
+    } else if (MONGODB_URI.includes('replica')) {
+      db.connectionType = 'replica';
+      console.log('🔗 Using Replica Set');
+    } else {
+      db.connectionType = 'local';
+      console.log('💻 Using Local MongoDB');
+    }
+
+    // MongoDB connection options with proper types
+    const options: ConnectOptions = {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      bufferMaxEntries: 0,
+      bufferCommands: false,
+    };
+
+    // Add server API settings for Atlas connections
+    if (db.connectionType === 'primary') {
+      options.serverApi = {
+        version: '1' as const, // Fixed: Use literal '1' instead of string
+        strict: true,
+        deprecationErrors: true,
       };
-      
-      await mongoose.connect(atlasUri, clientOptions);
-      
-      // Test the connection
-      await mongoose.connection.db.admin().command({ ping: 1 });
-      
-      this.isConnected = true;
-      return true;
-      
-    } catch (error) {
-      console.log('❌ X.509 connection failed:', error.message);
-      await this.safeDisconnect();
-      return false;
     }
-  }
 
-  async tryStandardConnection() {
-    try {
-      const standardUri = process.env.MONGODB_URI;
-      
-      if (!standardUri) {
-        console.log('🔑 Standard MongoDB URI not found in environment variables');
-        return false;
-      }
-      
-      console.log('🔗 Attempting standard MongoDB connection...');
-      
-      const options = {
-        autoIndex: true,
-        maxPoolSize: 10,
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
-        bufferMaxEntries: 0,
-        bufferCommands: false,
-      };
-      
-      await mongoose.connect(standardUri, options);
-      
-      // Test the connection
-      await mongoose.connection.db.admin().command({ ping: 1 });
-      
-      this.isConnected = true;
-      return true;
-      
-    } catch (error) {
-      console.log('❌ Standard connection failed:', error.message);
-      await this.safeDisconnect();
-      return false;
+    // Add TLS certificate for production
+    if (process.env.NODE_ENV === 'production' && process.env.TLS_CERT_PATH) {
+      options.tlsCertificateKeyFile = process.env.TLS_CERT_PATH;
     }
-  }
 
-  async tryLocalConnection() {
-    try {
-      console.log('🏠 Attempting local MongoDB connection...');
-      
-      const localUri = "mongodb://127.0.0.1:27017/magajico";
-      
-      const options = {
-        autoIndex: true,
-        maxPoolSize: 5,
-        serverSelectionTimeoutMS: 3000,
-        socketTimeoutMS: 30000,
-      };
-      
-      await mongoose.connect(localUri, options);
-      
-      this.isConnected = true;
-      return true;
-      
-    } catch (error) {
-      console.log('❌ Local connection failed:', error.message);
-      await this.safeDisconnect();
-      return false;
-    }
-  }
+    // Connect to MongoDB
+    const conn = await mongoose.connect(MONGODB_URI, options);
 
-  async safeDisconnect() {
-    try {
-      if (mongoose.connection.readyState !== 0) {
-        await mongoose.disconnect();
-      }
-    } catch (error) {
-      // Ignore disconnect errors during fallback attempts
-    }
-  }
+    db.isConnected = conn.connection.readyState;
 
-  async disconnectDB() {
-    try {
-      if (this.isConnected) {
-        await mongoose.disconnect();
-        this.isConnected = false;
-        console.log("📤 MagajiCo database disconnected");
-      }
-    } catch (err) {
-      console.error("❌ Database disconnect error:", err);
-    }
-  }
+    console.log('✅ MongoDB Connected Successfully');
+    console.log(`📍 Host: ${conn.connection.host}`);
+    console.log(`🗄️  Database: ${conn.connection.name}`);
+    console.log(`🔌 Connection State: ${getConnectionState(conn.connection.readyState)}`);
 
-  setupEventHandlers() {
+    // Connection event listeners
     mongoose.connection.on('connected', () => {
-      this.isConnected = true;
-      console.log(`🔗 MagajiCo connected to MongoDB via ${this.connectionType}`);
+      console.log('✅ Mongoose connected to MongoDB');
     });
 
-    mongoose.connection.on('error', (err) => {
-      console.error('❌ MagajiCo database error:', err);
-      this.isConnected = false;
+    mongoose.connection.on('error', (err: Error) => {
+      console.error('❌ Mongoose connection error:', err.message);
     });
 
     mongoose.connection.on('disconnected', () => {
-      this.isConnected = false;
-      console.log('📤 MagajiCo database disconnected');
+      console.log('⚠️  Mongoose disconnected from MongoDB');
+      db.isConnected = 0;
     });
 
-    mongoose.connection.on('reconnected', () => {
-      this.isConnected = true;
-      console.log('🔄 MagajiCo database reconnected');
-    });
-
-    // Graceful shutdown handlers
+    // Graceful shutdown
     process.on('SIGINT', async () => {
-      console.log('🔄 SIGINT received, closing MagajiCo database connection...');
-      await this.disconnectDB();
+      await mongoose.connection.close();
+      console.log('🛑 Mongoose connection closed due to app termination');
       process.exit(0);
     });
 
-    process.on('SIGTERM', async () => {
-      console.log('🔄 SIGTERM received, closing MagajiCo database connection...');
-      await this.disconnectDB();
-      process.exit(0);
-    });
-  }
-
-  getConnectionInfo() {
-    const states = {
-      0: 'disconnected',
-      1: 'connected',
-      2: 'connecting',
-      3: 'disconnecting'
-    };
+  } catch (err) {
+    console.error('❌ MongoDB connection error:', err);
     
-    return {
-      isConnected: this.isConnected,
-      connectionType: this.connectionType,
-      status: states[mongoose.connection.readyState] || 'unknown',
-      host: mongoose.connection.host,
-      port: mongoose.connection.port,
-      database: mongoose.connection.name,
-      readyState: mongoose.connection.readyState
-    };
-  }
+    // Type-safe error handling
+    if (err instanceof Error) {
+      console.error('Error details:', err.message);
+      console.error('Stack trace:', err.stack);
+    } else {
+      console.error('Unknown error:', err);
+    }
 
-  // Health check method for API endpoints
-  async healthCheck() {
-    try {
-      if (!this.isConnected) {
-        return {
-          status: 'disconnected',
-          healthy: false,
-          message: 'Database not connected'
-        };
-      }
-
-      // Ping the database
-      await mongoose.connection.db.admin().command({ ping: 1 });
-      
-      return {
-        status: 'connected',
-        healthy: true,
-        connectionType: this.connectionType,
-        database: mongoose.connection.name,
-        message: 'Database connection healthy'
-      };
-      
-    } catch (error) {
-      return {
-        status: 'error',
-        healthy: false,
-        error: error.message,
-        message: 'Database health check failed'
-      };
+    // In production, try fallback or retry logic
+    if (process.env.NODE_ENV === 'production') {
+      console.log('⚠️  Retrying connection in 5 seconds...');
+      setTimeout(() => connectDB(), 5000);
+    } else {
+      throw err;
     }
   }
+};
+
+// Helper function to get human-readable connection state
+function getConnectionState(state: number): string {
+  const states: { [key: number]: string } = {
+    0: 'Disconnected',
+    1: 'Connected',
+    2: 'Connecting',
+    3: 'Disconnecting',
+    99: 'Uninitialized'
+  };
+  return states[state] || 'Unknown';
 }
 
-// Create singleton instance
-const magajicoDb = new MagajicoDatabase();
+// Disconnect from database
+export const disconnectDB = async (): Promise<void> => {
+  try {
+    if (db.isConnected === 1) {
+      await mongoose.connection.close();
+      db.isConnected = 0;
+      console.log('✅ MongoDB disconnected successfully');
+    }
+  } catch (err) {
+    console.error('❌ Error disconnecting from MongoDB:', err);
+    if (err instanceof Error) {
+      throw new Error(`Failed to disconnect: ${err.message}`);
+    }
+    throw err;
+  }
+};
 
-// Export the instance and methods
-export const connectDB = () => magajicoDb.connectDB();
-export const disconnectDB = () => magajicoDb.disconnectDB();
-export const getConnectionInfo = () => magajicoDb.getConnectionInfo();
-export const healthCheck = () => magajicoDb.healthCheck();
+// Get connection status
+export const getDBStatus = () => {
+  return {
+    isConnected: db.isConnected === 1,
+    connectionType: db.connectionType || 'unknown',
+    readyState: mongoose.connection.readyState,
+    readyStateText: getConnectionState(mongoose.connection.readyState),
+    host: mongoose.connection.host || 'N/A',
+    name: mongoose.connection.name || 'N/A'
+  };
+};
 
-export default magajicoDb;
+// Health check function
+export const checkDBHealth = async (): Promise<boolean> => {
+  try {
+    if (db.isConnected !== 1) {
+      return false;
+    }
+    
+    // Ping the database
+    await mongoose.connection.db.admin().ping();
+    return true;
+  } catch (err) {
+    console.error('❌ Database health check failed:', err);
+    return false;
+  }
+};
 
-// .env.example - Environment variables template
-/*
-# Production X.509 Certificate Configuration
-MONGODB_X509_URI=mongodb+srv://clustermagaji.deweqyx.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&appName=ClusterMagaji
-MONGODB_CERT_PATH=./certs/mongodb-cert.pem
-
-# Standard MongoDB Atlas Configuration (alternative)
-MONGODB_URI=mongodb+srv://username:password@clustermagaji.deweqyx.mongodb.net/magajico?retryWrites=true&w=majority
-
-# Development Configuration
-NODE_ENV=development
-
-# Other configurations
-JWT_SECRET=your_jwt_secret_here
-PORT=3001
-*/
-
-// Usage in your main server file (server.js or app.js):
-/*
-import { connectDB, getConnectionInfo, healthCheck } from './config/database.js';
-
-// Connect to database on startup
-await connectDB();
-
-// Health check endpoint
-app.get('/api/health', async (req, res) => {
-  const dbHealth = await healthCheck();
-  const connectionInfo = getConnectionInfo();
-  
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    database: {
-      ...dbHealth,
-      ...connectionInfo
-    },
-    version: '2.0.0'
-  });
-});
-*/
+export default mongoose;
