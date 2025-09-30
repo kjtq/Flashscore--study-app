@@ -1,5 +1,5 @@
 
-const Prediction = require('@shared/models/Prediction');
+const Prediction = require('@shared/models/predict.py');
 const Author = require('@shared/models/Author');
 
 class PredictionController {
