@@ -341,6 +341,34 @@ export default class PiCoinManager {
     }
   }
 
+  // Purchase Pi Coins (for store purchases)
+  public purchasePiCoins(userId: string, amount: number, paymentMethod: string, metadata?: any): boolean {
+    return this.earnCoins(userId, amount, `Purchased ${amount} Pi Coins via ${paymentMethod}`, {
+      type: 'purchase',
+      paymentMethod,
+      ...metadata
+    });
+  }
+
+  // Get balance for a user
+  public getBalance(userId: string): any {
+    const wallet = this.wallets.get(userId);
+    if (!wallet) {
+      return this.createWallet(userId);
+    }
+    return {
+      userId: wallet.userId,
+      balance: wallet.balance,
+      totalEarned: wallet.totalEarned,
+      lastUpdated: new Date()
+    };
+  }
+
+  // Get transactions for a user
+  public getTransactions(userId: string): PiTransaction[] {
+    return this.getTransactionHistory(userId);
+  }
+
   // Utility method to reset wallet (for testing)
   public resetWallet(userId: string): boolean {
     if (this.wallets.has(userId)) {
