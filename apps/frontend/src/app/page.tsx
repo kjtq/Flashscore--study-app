@@ -29,6 +29,11 @@ export default function HomePage() {
       .catch(() => setBackendStatus("❌ Disconnected"));
   }, []);
 
+  // Debug effect to track toggle state
+  useEffect(() => {
+    console.log('Dashboard view changed to:', useOptimizedView ? 'Optimized' : 'Standard');
+  }, [useOptimizedView]);
+
   return (
     <div
       className={`min-h-screen text-white font-sans transition-all duration-1000 ${isLoaded ? "opacity-100" : "opacity-0"}`}
@@ -51,31 +56,45 @@ export default function HomePage() {
             </p>
             <div className="w-24 h-1 bg-gradient-to-r from-green-400 to-blue-500 mx-auto mt-4 rounded-full"></div>
             
-            {/* Dashboard View Toggle */}
+            {/* Dashboard View Toggle - Fixed */}
             <div className="absolute top-4 right-4">
               <button
-                onClick={() => setUseOptimizedView(!useOptimizedView)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 ${
+                onClick={() => {
+                  console.log('Toggle clicked, current state:', useOptimizedView);
+                  setUseOptimizedView(!useOptimizedView);
+                }}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 shadow-lg ${
                   useOptimizedView 
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                    : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    ? 'bg-green-500/30 text-green-300 border-2 border-green-500/50 shadow-green-500/20' 
+                    : 'bg-blue-500/30 text-blue-300 border-2 border-blue-500/50 shadow-blue-500/20'
                 }`}
+                title={`Switch to ${useOptimizedView ? 'Standard' : 'Optimized'} view`}
               >
-                {useOptimizedView ? '⚡ Optimized' : '📊 Standard'}
+                {useOptimizedView ? '⚡ Optimized Mode' : '📊 Standard Mode'}
               </button>
             </div>
           </div>
         </header>
 
-        {/* Conditional Dashboard Rendering */}
+        {/* Conditional Dashboard Rendering - Fixed */}
         {useOptimizedView ? (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fade-in">
+            <div className="text-center mb-4">
+              <div className="inline-block px-4 py-2 bg-green-500/20 text-green-400 rounded-full text-sm font-medium">
+                ⚡ Optimized Dashboard Active
+              </div>
+            </div>
             <OptimizedDashboard />
             <PerformanceOptimizer />
           </div>
         ) : (
-        /* Performance Optimized Dashboard Grid */
-        <div className="max-w-7xl mx-auto space-y-8">
+          /* Standard Dashboard Grid */
+          <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
+            <div className="text-center mb-4">
+              <div className="inline-block px-4 py-2 bg-blue-500/20 text-blue-400 rounded-full text-sm font-medium">
+                📊 Standard Dashboard Active
+              </div>
+            </div>
           {/* Key Metrics Row - Above the fold content */}
           <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
             {/* System Status Card - Optimized */}
