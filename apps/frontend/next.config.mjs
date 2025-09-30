@@ -9,30 +9,27 @@ const __dirname = path.dirname(__filename);
 const nextConfig = {
   reactStrictMode: true,
   compress: true,
-  
-  // Allow origins for Replit environment
-  allowedDevOrigins: [
-    '*.repl.co',
-    '*.replit.dev',
-    'localhost',
-    '127.0.0.1'
-  ],
 
   images: {
     formats: ["image/webp", "image/avif"],
   },
 
   async rewrites() {
-    const isDev = process.env.NODE_ENV === 'development';
+    // For Vercel deployment, use Replit backend
+    const backendUrl = process.env.NODE_ENV === 'production' 
+      ? process.env.NEXT_PUBLIC_BACKEND_URL || 'https://your-backend-name.replit.app'
+      : 'http://localhost:8000';
+
     return [
       {
         source: "/api/backend/:path*",
-        destination: isDev 
-          ? "http://localhost:8000/api/:path*"
-          : "/api/:path*",
+        destination: `${backendUrl}/api/:path*`,
       },
     ];
   },
+
+  // Vercel-specific configurations
+  output: process.env.VERCEL ? 'standalone' : undefined,
 
   webpack: (config) => {
     // Chunk optimization
