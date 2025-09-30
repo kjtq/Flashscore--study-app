@@ -1,12 +1,15 @@
 from fastapi import FastAPI
-from routes import predict, matches, news
+from pydantic import BaseModel
+from ml.magajico_predictor import MagajiCoMLPredictor
 
-app = FastAPI(title="MagajiCo Enhanced API", version="2.0.0")
+app = FastAPI(title="MagajiCo ML Prediction API")
 
-app.include_router(predict.router, prefix="/api/predict")
-app.include_router(matches.router, prefix="/api/matches")
-app.include_router(news.router, prefix="/api/news")
+# Load model once at startup
+predictor = MagajiCoMLPredictor()
 
-@app.get("/")
-def root():
-    return {"message": "MagajiCo FastAPI backend is running 🚀"}
+class PredictionInput(BaseModel):
+    features: list[float]  # must be length 7
+
+@app.post("/predict")
+def predict(input: PredictionInput):
+    return predictor.predict(input.features)
