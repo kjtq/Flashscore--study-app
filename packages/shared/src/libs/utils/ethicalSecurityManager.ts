@@ -140,6 +140,24 @@ class EthicalSecurityManager {
   // Content filtering and sanitization
   static sanitizeContent(content: string): string {
     if (!content || typeof content !== 'string') return '';
+    
+    // Remove potential XSS patterns
+    let sanitized = content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '')
+      .replace(/<\s*\/?\s*(script|object|embed|link|style|meta)[^>]*>/gi, '');
+    
+    // Encode special characters
+    sanitized = sanitized
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+    
+    return sanitized;
 
     return content
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
