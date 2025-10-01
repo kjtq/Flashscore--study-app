@@ -1,7 +1,7 @@
 
 import { NextApiRequest, NextApiResponse } from 'next';
 
-const AuthorController = require('@controllers/authorController');
+const AuthorController = require('@s/authorController');
 const authorController = new AuthorController();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
