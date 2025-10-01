@@ -11,7 +11,7 @@ The application is designed as a full-stack platform featuring real-time sports 
 ### Replit Environment Setup (October 1, 2025)
 - Configured monorepo for Replit environment with pnpm workspaces
 - Frontend running on port 5000 (0.0.0.0) for public access
-- Backend running on port 8000 (localhost) for internal API calls
+- Backend running on port 3000 (localhost) for internal API calls
 - Next.js configured to work with Replit's proxy/iframe system
 - Database-dependent routes temporarily disabled (require MongoDB setup)
 - Python ML service dependencies installed for future use

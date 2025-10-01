@@ -188,7 +188,7 @@ const start = async () => {
     await connectDB();
     server.log.info('✅ Database connected successfully');
 
-    const port = Number(process.env.PORT) || 8000;
+    const port = Number(process.env.PORT) || 3000;
     const host = process.env.HOST || 'localhost';
 
     await server.listen({ port, host });
