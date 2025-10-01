@@ -6,8 +6,9 @@ channel = "stable-25_05"
 packages = ["miktex", "nix-output-monitor"]
 
 [deployment]
-run = ["sh", "-c", "cd apps/backend && npm start & cd apps/frontend && npm start"]
-build = ["sh", "-c", "cd apps/frontend && npm install && npm run build"]
+run = ["sh", "-c", "cd apps/frontend && pnpm start"]
+build = ["sh", "-c", "cd apps/frontend && pnpm build"]
+deploymentTarget = "autoscale"
 
 [workflows]
 runButton = "Project"
