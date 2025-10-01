@@ -114,18 +114,6 @@ args = "cd apps/frontend && pnpm run dev"
 waitForPort = 5000
 
 [[workflows.workflow]]
-name = "Backend"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd apps/backend && pnpm run dev"
-waitForPort = 8000
-
-[[workflows.workflow]]
 name = "Full Stack NPM"
 author = 46296136
 mode = "parallel"
@@ -249,9 +237,21 @@ args = "chmod +x start-production.sh"
 task = "shell.exec"
 args = "./start-production.sh"
 
+[[workflows.workflow]]
+name = "Backend"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/backend && pnpm run dev"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[ports]]
 localPort = 3000
 externalPort = 3000
+exposeLocalhost = true
 
 [[ports]]
 localPort = 3001
@@ -265,10 +265,6 @@ externalPort = 80
 localPort = 8000
 externalPort = 8000
 exposeLocalhost = true
-
-[[ports]]
-localPort = 43179
-externalPort = 3002
 
 [agent]
 expertMode = true
