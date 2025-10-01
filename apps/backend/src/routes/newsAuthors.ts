@@ -1,29 +1,98 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { NewsAuthorController } from '../controllers/newsAuthorController';
 import { authMiddleware } from '../middleware/authMiddleware';
 
-export async function newsAuthorRoutes(fastify: FastifyInstance) {
-  // Get all active authors (public)
-  fastify.get('/news-authors', NewsAuthorController.getAllAuthors);
-  
-  // Get author by ID (public for basic info)
-  fastify.get('/news-authors/:id', NewsAuthorController.getAuthorById);
-  
-  // Create or update author (member access required)
+// ==== Request Body Interfaces (DTOs) ====
+interface CreateAuthorBody {
+  id: string;
+  name: string;
+  icon: string;
+  bio?: string;
+  expertise?: string[];
+}
+
+interface CreateCollaborationBody {
+  title: string;
+  preview: string;
+  fullContent: string;
+  collaborationType: 'prediction' | 'analysis' | 'community' | 'update';
+  tags?: string[];
+}
+
+interface TrackActivityBody {
+  authorId: string;
+  eventType: string;
+  eventData: any;
+}
+
+// ==== Routes ====
+export default async function newsAuthorsRoutes(fastify: FastifyInstance) {
+  // ----- Public Routes -----
+
+  // Get all authors
+  fastify.get('/news-authors', async (
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) => {
+    return NewsAuthorController.getAllAuthors(request, reply);
+  });
+
+  // Get single author
+  fastify.get('/news-authors/:id', async (
+    request: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ) => {
+    return NewsAuthorController.getAuthorById(request, reply);
+  });
+
+  // Initialize default authors
+  fastify.post('/news-authors/initialize', async (
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) => {
+    return NewsAuthorController.initializeDefaultAuthors(request, reply);
+  });
+
+
+  // ----- Member Routes (Require Auth) -----
+
+  // Create or update author
   fastify.post('/news-authors', {
     preHandler: authMiddleware.requireMemberAccess
-  }, NewsAuthorController.createOrUpdateAuthor);
-  
-  // Create collaboration news (member access required)
+  }, async (
+    request: FastifyRequest<{ Body: CreateAuthorBody }>,
+    reply: FastifyReply
+  ) => {
+    return NewsAuthorController.createOrUpdateAuthor(request, reply);
+  });
+
+  // Create collaboration
   fastify.post('/news-authors/:id/collaborate', {
     preHandler: authMiddleware.requireMemberAccess
-  }, NewsAuthorController.createCollaborationNews);
-  
-  // Generate automatic news (member access required)
+  }, async (
+    request: FastifyRequest<{ Params: { id: string }, Body: CreateCollaborationBody }>,
+    reply: FastifyReply
+  ) => {
+    return NewsAuthorController.createCollaborationNews(request, reply);
+  });
+
+  // Auto-generate news
   fastify.post('/news-authors/auto-news', {
     preHandler: authMiddleware.requireMemberAccess
-  }, NewsAuthorController.generateAutoNews);
-  
-  // Initialize default authors (public for setup)
-  fastify.post('/news-authors/initialize', NewsAuthorController.initializeDefaultAuthors);
+  }, async (
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) => {
+    return NewsAuthorController.generateAutoNews(request, reply);
+  });
+
+  // Track author activity
+  fastify.post('/news-authors/activity', {
+    preHandler: authMiddleware.requireMemberAccess
+  }, async (
+    request: FastifyRequest<{ Body: TrackActivityBody }>,
+    reply: FastifyReply
+  ) => {
+    return NewsAuthorController.trackActivity(request, reply);
+  });
 }
