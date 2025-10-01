@@ -7,17 +7,17 @@ import { connectDB } from "./config/db";
 
 // Existing routes
 import { healthRoutes } from "./routes/health";
-import { matchRoutes } from "./routes/matches";
-import { predictionRoutes } from "./routes/predictions";
-import { scraperRoutes } from "./routes/scraper";
-import { mlRoutes } from "./routes/ml";
-import { newsAuthorRoutes } from "./routes/newsAuthors";
-import { newsAuthorRoutes as newsRoutes } from "./routes/news";
+// import { matchRoutes } from "./routes/matches";
+// import { predictionRoutes } from "./routes/predictions";
+// import { scraperRoutes } from "./routes/scraper";
+// import { mlRoutes } from "./routes/ml";
+// import { newsAuthorRoutes } from "./routes/newsAuthors";
+// import { newsAuthorRoutes as newsRoutes } from "./routes/news";
 
 // Enhanced MagajiCo routes
-import { enhancedPredictionRoutes } from "./routes/enhanced-predictions";
+// import { enhancedPredictionRoutes } from "./routes/enhanced-predictions";
 // import { ceoAnalysisRoutes } from "./routes/ceo-analysis"; // Route file missing
-import { marketIntelligenceRoutes } from "./routes/market-intelligence";
+// import { marketIntelligenceRoutes } from "./routes/market-intelligence";
 
 const server = Fastify({
   logger: {
@@ -128,17 +128,18 @@ server.setNotFoundHandler((request, reply) => {
 
 // Register existing routes
 server.register(healthRoutes, { prefix: "/api" });
-server.register(matchRoutes, { prefix: "/api" });
-server.register(predictionRoutes, { prefix: "/api" });
-server.register(scraperRoutes, { prefix: "/api" });
-server.register(mlRoutes, { prefix: "/api/ml" });
-server.register(newsAuthorRoutes, { prefix: "/api" });
-server.register(newsRoutes, { prefix: "/api" });
+// Database-dependent routes commented out until DB is configured
+// server.register(matchRoutes, { prefix: "/api" });
+// server.register(predictionRoutes, { prefix: "/api" });
+// server.register(scraperRoutes, { prefix: "/api" });
+// server.register(mlRoutes, { prefix: "/api/ml" });
+// server.register(newsAuthorRoutes, { prefix: "/api" });
+// server.register(newsRoutes, { prefix: "/api" });
 
 // Register enhanced MagajiCo routes
-server.register(enhancedPredictionRoutes, { prefix: "/api/v2/predictions" });
+// server.register(enhancedPredictionRoutes, { prefix: "/api/v2/predictions" });
 // server.register(ceoAnalysisRoutes, { prefix: "/api/v2/ceo" }); // Route file missing
-server.register(marketIntelligenceRoutes, { prefix: "/api/v2/market" });
+// server.register(marketIntelligenceRoutes, { prefix: "/api/v2/market" });
 
 // Root endpoint
 server.get('/', async (request, reply) => {

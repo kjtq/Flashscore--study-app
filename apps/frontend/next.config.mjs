@@ -14,10 +14,6 @@ const nextConfig = {
     formats: ["image/webp", "image/avif"],
   },
 
-  experimental: {
-    allowedOrigins: ['*'],
-  },
-
   async rewrites() {
     // For Vercel deployment, use Replit backend
     const backendUrl = process.env.NODE_ENV === 'production'
