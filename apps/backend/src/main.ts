@@ -57,7 +57,7 @@ const allowedOrigins = [
   'http://0.0.0.0:3000'
 ].filter((origin): origin is string => typeof origin === 'string');
 
-server.register(cors, { 
+server.register(cors, {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
@@ -68,7 +68,7 @@ server.register(cors, {
     }
     return callback(new Error('Not allowed by CORS'), false);
   },
-  credentials: true 
+  credentials: true
 });
 
 // Request logging middleware
@@ -188,14 +188,14 @@ const start = async () => {
     await connectDB();
     server.log.info('✅ Database connected successfully');
 
-    const port = Number(process.env.PORT) || 3000;
-    const host = process.env.HOST || 'localhost';
-
-    await server.listen({ port, host });
+    await server.listen({
+      port: Number(process.env.PORT) || 3000,
+      host: "0.0.0.0",
+    });
 
     server.log.info({
-      port,
-      host,
+      port: Number(process.env.PORT) || 3000,
+      host: "0.0.0.0",
       environment: process.env.NODE_ENV || 'development',
       nodeVersion: process.version
     }, '🚀 MagajiCo Enhanced Server started successfully');

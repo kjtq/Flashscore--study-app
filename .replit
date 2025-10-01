@@ -11,7 +11,7 @@ build = ["sh", "-c", "cd apps/frontend && pnpm build"]
 deploymentTarget = "autoscale"
 
 [workflows]
-runButton = "Project"
+runButton = "Enhanced Full Stack"
 
 [[workflows.workflow]]
 name = "Start Sports API"
@@ -273,6 +273,15 @@ args = "cd apps/frontend && pnpm run dev"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd apps/backend/ml && python main.py"
+
+[[workflows.workflow]]
+name = "Enhanced Full Stack"
+author = 48184960
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "chmod +x start-enhanced.sh && ./start-enhanced.sh"
 
 [[ports]]
 localPort = 3000

@@ -45,10 +45,14 @@ export default function MagajiCoManager({
 
   useEffect(() => {
     // Fix hydration issue by setting time on client only
-    setCurrentTime(new Date().toLocaleTimeString());
-    const timer = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString());
-    }, 1000);
+    const updateTime = () => {
+      if (typeof window !== 'undefined') {
+        setCurrentTime(new Date().toLocaleTimeString());
+      }
+    };
+    
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -59,7 +63,12 @@ export default function MagajiCoManager({
 
   const checkMLService = async () => {
     try {
-      const response = await fetch('http://0.0.0.0:8000/health');
+      const response = await fetch('/api/ml/health', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       if (response.ok) {
         setMlServiceReady(true);
       }
@@ -177,12 +186,12 @@ export default function MagajiCoManager({
 
   const makeMLPrediction = async (features: number[]) => {
     try {
-      const response = await fetch('http://0.0.0.0:8000/predict', {
+      const response = await fetch('/api/ml/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(features)
+        body: JSON.stringify({ features })
       });
 
       if (response.ok) {
