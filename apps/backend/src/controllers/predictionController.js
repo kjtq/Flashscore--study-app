@@ -1,5 +1,5 @@
-const Prediction = require('@shared/models/Prediction');
-const Author = require('@shared/models/Author');
+const Prediction = require("@shared/models/Prediction");
+const Author = require("@shared/models/Author");
 const axios = require("axios");
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://localhost:8000";
@@ -27,7 +27,9 @@ class PredictionController {
   async createPrediction(predictionData) {
     try {
       // Call ML service first
-      const mlResult = await fetchPredictionFromMLService(predictionData.features || []);
+      const mlResult = await fetchPredictionFromMLService(
+        predictionData.features || [],
+      );
 
       const prediction = new Prediction(
         this.nextId++,
@@ -36,8 +38,8 @@ class PredictionController {
         predictionData.authorId,
         predictionData.sport,
         predictionData.matchDetails,
-        mlResult.confidence * 100,   // save ML confidence as percentage
-        predictionData.status || 'pending'
+        mlResult.confidence * 100, // save ML confidence as percentage
+        predictionData.status || "pending",
       );
 
       // Attach ML classification
@@ -45,13 +47,13 @@ class PredictionController {
 
       const validation = prediction.validate();
       if (!validation.isValid) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+        throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
       }
 
       // Verify author exists
-      const author = this.authors.find(a => a.id === prediction.authorId);
+      const author = this.authors.find((a) => a.id === prediction.authorId);
       if (!author) {
-        throw new Error('Author not found');
+        throw new Error("Author not found");
       }
 
       this.predictions.push(prediction);
