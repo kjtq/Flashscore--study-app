@@ -6,6 +6,23 @@ Sports Central is a premium monorepo built with cutting-edge technology that del
 
 The application is designed as a full-stack platform featuring real-time sports data, intelligent predictions, community voting, gamified quizzes, and a cryptocurrency rewards system. It includes a Progressive Web App (PWA) with offline capabilities and a browser extension for enhanced user engagement across sports websites.
 
+## Recent Changes
+
+### Replit Environment Setup (October 1, 2025)
+- Configured monorepo for Replit environment with pnpm workspaces
+- Frontend running on port 5000 (0.0.0.0) for public access
+- Backend running on port 8000 (localhost) for internal API calls
+- Next.js configured to work with Replit's proxy/iframe system
+- Database-dependent routes temporarily disabled (require MongoDB setup)
+- Python ML service dependencies installed for future use
+- Deployment configured for autoscale with frontend deployment
+
+### Important Notes
+- **Database**: MongoDB connection is optional - backend will run without it but with limited functionality
+- **Routes**: Most backend routes are commented out pending database configuration
+- **ML Service**: Python dependencies installed but ML routes not active yet
+- **Environment Variables**: MONGODB_URI needed to enable full backend functionality
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
