@@ -21,7 +21,9 @@ export const connectDB = async (): Promise<void> => {
     const MONGODB_URI = process.env.MONGODB_URI;
     
     if (!MONGODB_URI) {
-      throw new Error('MONGODB_URI is not defined in environment variables');
+      console.log('⚠️  MONGODB_URI is not defined - running without database');
+      db.isConnected = 0;
+      return;
     }
 
     console.log('🔄 Connecting to MongoDB...');
