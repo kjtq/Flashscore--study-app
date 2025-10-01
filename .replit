@@ -248,6 +248,32 @@ args = "cd apps/backend && pnpm run dev"
 [workflows.workflow.metadata]
 outputType = "console"
 
+[[workflows.workflow]]
+name = "ML Service"
+author = 48184960
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/backend/ml && python main.py"
+
+[[workflows.workflow]]
+name = "Full Stack with ML"
+author = 48184960
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/backend && pnpm run dev"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/frontend && pnpm run dev"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/backend/ml && python main.py"
+
 [[ports]]
 localPort = 3000
 externalPort = 3000

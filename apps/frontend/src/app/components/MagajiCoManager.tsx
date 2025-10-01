@@ -40,6 +40,33 @@ export default function MagajiCoManager({
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [currentTime, setCurrentTime] = useState("");
+  const [mlServiceReady, setMlServiceReady] = useState(false);
+
+  useEffect(() => {
+    // Fix hydration issue by setting time on client only
+    setCurrentTime(new Date().toLocaleTimeString());
+    const timer = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    // Check ML service status
+    checkMLService();
+  }, []);
+
+  const checkMLService = async () => {
+    try {
+      const response = await fetch('http://0.0.0.0:8000/health');
+      if (response.ok) {
+        setMlServiceReady(true);
+      }
+    } catch (error) {
+      console.log('ML service not available');
+    }
+  };
 
   // Fetch predictions from backend
   const fetchPredictions = async () => {
@@ -148,38 +175,102 @@ export default function MagajiCoManager({
     return `🧠 I understand your query about "${userMessage}". As your AI CEO, I'm analyzing this through the lens of strategic business intelligence. How can I provide more specific insights?`;
   };
 
+  const makeMLPrediction = async (features: number[]) => {
+    try {
+      const response = await fetch('http://0.0.0.0:8000/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(features)
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (error) {
+      console.error('ML prediction error:', error);
+    }
+    return null;
+  };
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
-    // Add user message
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: Math.random().toString(36).substr(2, 9),
       text: inputMessage,
       isUser: true,
       timestamp: new Date(),
-      type: "text",
+      type: "text"
     };
 
     setChatMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsTyping(true);
 
-    // Simulate AI thinking time
-    setTimeout(
-      () => {
-        const aiResponse: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          text: generateAIResponse(userMessage.text),
-          isUser: false,
-          timestamp: new Date(),
-          type: "text",
-        };
+    try {
+      // Check if user is requesting a prediction
+      const isPredictionRequest = inputMessage.toLowerCase().includes('predict') || 
+                                 inputMessage.toLowerCase().includes('match') ||
+                                 inputMessage.toLowerCase().includes('game');
 
-        setChatMessages((prev) => [...prev, aiResponse]);
-        setIsTyping(false);
-      },
-      1000 + Math.random() * 2000,
-    );
+      let response;
+
+      if (isPredictionRequest && mlServiceReady) {
+        // Use ML service for predictions
+        const mockFeatures = [0.75, 0.65, 0.6, 0.8, 0.7, 0.55, 0.9]; // Example features
+        const mlResult = await makeMLPrediction(mockFeatures);
+
+        if (mlResult) {
+          response = {
+            message: `🤖 ML Prediction: ${mlResult.prediction.toUpperCase()} win (${(mlResult.confidence * 100).toFixed(1)}% confidence)\n\nProbabilities:\n• Home: ${(mlResult.probabilities.home * 100).toFixed(1)}%\n• Draw: ${(mlResult.probabilities.draw * 100).toFixed(1)}%\n• Away: ${(mlResult.probabilities.away * 100).toFixed(1)}%`,
+            type: 'prediction',
+            prediction: {
+              match: 'Example Match',
+              confidence: (mlResult.confidence * 100).toFixed(1)
+            }
+          };
+        } else {
+          response = await magajicoCEO(inputMessage);
+        }
+      } else {
+        // Use regular CEO response
+        response = await magajicoCEO(inputMessage);
+      }
+
+      const ceoMessage: ChatMessage = {
+        id: Math.random().toString(36).substr(2, 9),
+        text: response.message,
+        isUser: false,
+        timestamp: new Date(),
+        type: response.type === 'prediction' ? 'prediction' : 'text'
+      };
+
+      setChatMessages((prev) => [...prev, ceoMessage]);
+
+      // Show floating alert for important predictions
+      if (response.type === 'prediction') {
+        triggerFloatingAlert({
+          type: 'success',
+          title: 'New Prediction Available',
+          message: `${response.prediction?.match} - Confidence: ${response.prediction?.confidence}%`,
+          duration: 5000
+        });
+      }
+    } catch (error) {
+      console.error('Error getting CEO response:', error);
+      const errorMessage: ChatMessage = {
+        id: Math.random().toString(36).substr(2, 9),
+        text: "I'm having trouble processing that right now. Please try again.",
+        isUser: false,
+        timestamp: new Date(),
+        type: "text"
+      };
+      setChatMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

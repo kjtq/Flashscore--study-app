@@ -7,16 +7,22 @@ interface PredictionData {
   match: string;
   prediction: string;
   confidence: number;
-  odds: number;
+  odds?: number; // Optional odds
   analysis?: string;
   homeTeam: string;
   awayTeam: string;
   league: string;
   date: string;
+  probabilities?: { // Added probabilities for ML prediction
+    home: number;
+    draw: number;
+    away: number;
+  };
+  modelVersion?: string; // Added model version
 }
 
 interface PredictionPreviewProps {
-  prediction?: PredictionData;
+  prediction?: PredictionData; // Use the enhanced PredictionData type
   showFullAnalysis?: boolean;
   compact?: boolean;
 }
@@ -40,7 +46,7 @@ const PredictionPreview: React.FC<PredictionPreviewProps> = ({
   const fetchLatestPrediction = async () => {
     setLoading(true);
     try {
-      // Mock data for demo
+      // Mock data for demo - replace with actual API call
       const mockPrediction: PredictionData = {
         id: "pred_001",
         match: "Manchester United vs Liverpool",
@@ -51,7 +57,13 @@ const PredictionPreview: React.FC<PredictionPreviewProps> = ({
         odds: 1.85,
         league: "Premier League",
         date: new Date().toISOString(),
-        analysis: "Both teams have strong attacking records this season."
+        analysis: "Both teams have strong attacking records this season.",
+        probabilities: { // Mock probabilities
+          home: 0.45,
+          draw: 0.30,
+          away: 0.25,
+        },
+        modelVersion: "v2.1.0" // Mock model version
       };
       setCurrentPrediction(mockPrediction);
     } catch (error) {
@@ -111,9 +123,11 @@ const PredictionPreview: React.FC<PredictionPreviewProps> = ({
             <span className="text-white font-medium">
               {currentPrediction.prediction}
             </span>
-            <span className="text-blue-400 font-bold">
-              @{currentPrediction.odds}
-            </span>
+            {currentPrediction.odds !== undefined && ( // Conditionally render odds
+              <span className="text-blue-400 font-bold">
+                @{currentPrediction.odds}
+              </span>
+            )}
           </div>
         </div>
 
@@ -121,6 +135,25 @@ const PredictionPreview: React.FC<PredictionPreviewProps> = ({
           <div className="mt-4 p-3 bg-white/5 rounded-lg">
             <h4 className="font-semibold text-white mb-2">Analysis</h4>
             <p className="text-gray-300 text-sm">{currentPrediction.analysis}</p>
+          </div>
+        )}
+
+        {/* Display ML probabilities if available */}
+        {currentPrediction.probabilities && (
+          <div className="mt-4 p-3 bg-white/5 rounded-lg">
+            <h4 className="font-semibold text-white mb-2">Probabilities</h4>
+            <div className="flex justify-between text-sm">
+              <span>Home Win: {currentPrediction.probabilities.home.toFixed(2)}</span>
+              <span>Draw: {currentPrediction.probabilities.draw.toFixed(2)}</span>
+              <span>Away Win: {currentPrediction.probabilities.away.toFixed(2)}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Display Model Version if available */}
+        {currentPrediction.modelVersion && (
+          <div className="mt-2 text-right text-xs text-gray-500">
+            Model: {currentPrediction.modelVersion}
           </div>
         )}
 
