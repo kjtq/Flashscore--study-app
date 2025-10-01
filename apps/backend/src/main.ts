@@ -12,11 +12,11 @@ import { predictionRoutes } from "./routes/predictions";
 import { scraperRoutes } from "./routes/scraper";
 import { mlRoutes } from "./routes/ml";
 import { newsAuthorRoutes } from "./routes/newsAuthors";
-import { newsRoutes } from "./routes/news";
+import { newsAuthorRoutes as newsRoutes } from "./routes/news";
 
 // Enhanced MagajiCo routes
 import { enhancedPredictionRoutes } from "./routes/enhanced-predictions";
-import { ceoAnalysisRoutes } from "./routes/ceo-analysis";
+// import { ceoAnalysisRoutes } from "./routes/ceo-analysis"; // Route file missing
 import { marketIntelligenceRoutes } from "./routes/market-intelligence";
 
 const server = Fastify({
@@ -137,7 +137,7 @@ server.register(newsRoutes, { prefix: "/api" });
 
 // Register enhanced MagajiCo routes
 server.register(enhancedPredictionRoutes, { prefix: "/api/v2/predictions" });
-server.register(ceoAnalysisRoutes, { prefix: "/api/v2/ceo" });
+// server.register(ceoAnalysisRoutes, { prefix: "/api/v2/ceo" }); // Route file missing
 server.register(marketIntelligenceRoutes, { prefix: "/api/v2/market" });
 
 // Root endpoint
@@ -174,7 +174,7 @@ const gracefulShutdown = async (signal: string) => {
     server.log.info('Server closed successfully');
     process.exit(0);
   } catch (error) {
-    server.log.error('Error during shutdown:', error);
+    server.log.error({ error }, 'Error during shutdown');
     process.exit(1);
   }
 };
@@ -188,7 +188,7 @@ const start = async () => {
     server.log.info('✅ Database connected successfully');
 
     const port = Number(process.env.PORT) || 8000;
-    const host = process.env.HOST || '0.0.0.0';
+    const host = process.env.HOST || 'localhost';
 
     await server.listen({ port, host });
 
@@ -200,7 +200,7 @@ const start = async () => {
     }, '🚀 MagajiCo Enhanced Server started successfully');
 
   } catch (err) {
-    server.log.error('❌ Failed to start server:', err);
+    server.log.error({ err }, '❌ Failed to start server');
     process.exit(1);
   }
 };
