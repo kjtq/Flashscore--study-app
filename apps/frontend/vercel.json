@@ -1,21 +1,12 @@
 {
-  "buildCommand": "pnpm run build",
-  "installCommand": "pnpm install",
+  "buildCommand": "cd apps/frontend && pnpm build",
+  "installCommand": "pnpm install --filter frontend",
+  "outputDirectory": "apps/frontend/.next",
   "framework": "nextjs",
   "env": {
     "NODE_ENV": "production",
     "NEXTAUTH_URL": "https://your-vercel-app-name.vercel.app",
     "NEXT_PUBLIC_BACKEND_URL": "https://flashstudy-ri0g.onrender.com"
-  },
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
-  },
-  "functions": {
-    "src/app/api/**": {
-      "runtime": "nodejs18.x"
-    }
   },
   "rewrites": [
     {

@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { fetchPredictions } from "@services/predictionsService";
-import PredictionController from "@controllers/predictionController";
+import PredictionController from "@bcontrollers/predictionController";
 
 const predictionController = new PredictionController();
 
