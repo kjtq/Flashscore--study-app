@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: magajico-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd apps/backend && npm install && npm run build
+    startCommand: cd apps/backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false  # Set this in Render dashboard
+      - key: PORT
+        value: 3001
