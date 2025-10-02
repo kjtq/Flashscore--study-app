@@ -1,8 +1,6 @@
-// app/api/predictions/route.ts (Full Upgraded)
-
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 
 // MongoDB Connection
 const uri = process.env.MONGODB_URI as string;
@@ -16,88 +14,148 @@ async function getClient() {
   return client;
 }
 
-// Types
-export interface Prediction {
-  matchId: string;
-  homeTeam: string;
-  awayTeam: string;
-  predictedWinner: string;
-  confidence: number;
-  odds?: number;
-  status: "upcoming" | "completed";
-  matchDate: Date;
-  source: "scraping" | "ml" | "hybrid";
-  createdAt?: Date;
-}
-
-// Service: Scraping Layer
-async function fetchScrapedMatches(): Promise<any[]> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/scrape/matches`);
-  return response.json();
-}
-
-// Service: ML Layer
-async function getMlPrediction(match: any): Promise<any> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/ml/predict`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(match),
-  });
-  return response.json();
-}
-
-// Create Prediction
-export async function createPrediction(prediction: Prediction) {
-  const client = await getClient();
-  const db = client.db("magajico");
-  const predictions = db.collection("predictions");
-
-  const record = {
-    ...prediction,
-    createdAt: new Date(),
+interface RouteParams {
+  params: {
+    id: string;
   };
-
-  await predictions.insertOne(record);
-  revalidatePath("/predictions");
-
-  return record;
 }
 
-// API Route
-export async function POST(req: Request) {
+// GET - Fetch single prediction by ID
+export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
-    const { mode } = await req.json(); // mode: "scraping" | "ml" | "hybrid"
+    const { id } = params;
 
-    const scrapedMatches = await fetchScrapedMatches();
-    const predictions: Prediction[] = [];
-
-    for (const match of scrapedMatches) {
-      let mlResult: any = {};
-
-      if (mode !== "scraping") {
-        mlResult = await getMlPrediction(match);
-      }
-
-      const prediction: Prediction = {
-        matchId: match.id,
-        homeTeam: match.homeTeam,
-        awayTeam: match.awayTeam,
-        predictedWinner: mlResult.predictedWinner || match.homeTeam,
-        confidence: mlResult.confidence || 50,
-        odds: match.odds,
-        status: "upcoming",
-        matchDate: new Date(match.date),
-        source: mode,
-      };
-
-      const record = await createPrediction(prediction);
-      predictions.push(record);
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "Invalid prediction ID" },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json({ success: true, predictions }, { status: 201 });
+    const client = await getClient();
+    const db = client.db("magajico");
+    const predictions = db.collection("predictions");
+
+    const prediction = await predictions.findOne({ _id: new ObjectId(id) });
+
+    if (!prediction) {
+      return NextResponse.json(
+        { error: "Prediction not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, prediction }, { status: 200 });
   } catch (error: any) {
+    console.error(`GET /api/predictions/${params.id} error:`, error);
     return NextResponse.json(
-      { error: error.message || "Failed to generate predictions" },
+      { error: error.message || "Failed to fetch prediction" },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH - Update prediction
+export async function PATCH(req: NextRequest, { params }: RouteParams) {
+  try {
+    const { id } = params;
+
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "Invalid prediction ID" },
+        { status: 400 }
+      );
+    }
+
+    const body = await req.json();
+    const allowedUpdates = [
+      "status",
+      "predictedWinner",
+      "confidence",
+      "odds",
+    ];
+
+    const updates: any = {};
+    for (const key of allowedUpdates) {
+      if (body[key] !== undefined) {
+        updates[key] = body[key];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json(
+        { error: "No valid update fields provided" },
+        { status: 400 }
+      );
+    }
+
+    const client = await getClient();
+    const db = client.db("magajico");
+    const predictions = db.collection("predictions");
+
+    const result = await predictions.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: updates },
+      { returnDocument: "after" }
+    );
+
+    if (!result) {
+      return NextResponse.json(
+        { error: "Prediction not found" },
+        { status: 404 }
+      );
+    }
+
+    revalidatePath("/predictions");
+
+    return NextResponse.json(
+      { success: true, prediction: result },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error(`PATCH /api/predictions/${params.id} error:`, error);
+    return NextResponse.json(
+      { error: error.message || "Failed to update prediction" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Delete prediction
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  try {
+    const { id } = params;
+
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "Invalid prediction ID" },
+        { status: 400 }
+      );
+    }
+
+    const client = await getClient();
+    const db = client.db("magajico");
+    const predictions = db.collection("predictions");
+
+    const result = await predictions.deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json(
+        { error: "Prediction not found" },
+        { status: 404 }
+      );
+    }
+
+    revalidatePath("/predictions");
+
+    return NextResponse.json(
+      { success: true, message: "Prediction deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error(`DELETE /api/predictions/${params.id} error:`, error);
+    return NextResponse.json(
+      { error: error.message || "Failed to delete prediction" },
       { status: 500 }
     );
   }
