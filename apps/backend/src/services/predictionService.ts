@@ -1,8 +1,43 @@
 // apps/backend/src/services/predictionService.ts
 import { spawn } from "child_process";
+import fetch from "node-fetch";
 
-// This function calls a Python script (PyTorch model)
-export async function predictMatch(homeTeam: string, awayTeam: string) {
+interface PredictionResult {
+  predictedWinner: string;
+  confidence: number;
+}
+
+/**
+ * Try ML microservice first (FastAPI on :8000).
+ * If it fails, fallback to local Python script.
+ */
+export async function predictMatch(
+  homeTeam: string,
+  awayTeam: string,
+): Promise<PredictionResult> {
+  // Try FastAPI first
+  try {
+    const response = await fetch("http://localhost:8000/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ homeTeam, awayTeam }),
+    });
+
+    if (response.ok) {
+      return await response.json();
+    } else {
+      console.warn(
+        "FastAPI ML returned error, falling back to local Python...",
+      );
+    }
+  } catch (err) {
+    console.warn(
+      "FastAPI ML unavailable, falling back to local Python...",
+      err,
+    );
+  }
+
+  // Fallback: local Python
   return new Promise((resolve, reject) => {
     const py = spawn("python3", ["./ml/predict.py", homeTeam, awayTeam]);
 
