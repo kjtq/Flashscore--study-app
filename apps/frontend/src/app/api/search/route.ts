@@ -1,11 +1,6 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import PredictionController from '../../controllers/predictionController.js';
-import AuthorController from '../../controllers/authorController.js';
-import { NewsService } from '../../services/newsService';
 
-const predictionController = new PredictionController();
-const authorController = new AuthorController();
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://flashstudy-ri0g.onrender.com";
 
 interface SearchParams {
   query: string;
@@ -14,10 +9,18 @@ interface SearchParams {
   limit?: number;
 }
 
+interface SearchResult {
+  id: string;
+  type: string;
+  title: string;
+  content: string;
+  [key: string]: any;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     const query = searchParams.get('query') || '';
     const type = searchParams.get('type') || 'all';
     const sport = searchParams.get('sport') || 'all';
@@ -30,33 +33,44 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const results = [];
+    const authHeader = request.headers.get('authorization');
+    const results: SearchResult[] = [];
+
+    // Prepare fetch options
+    const fetchOptions: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authHeader && { 'Authorization': authHeader })
+      },
+      next: { revalidate: 30 } // Cache for 30 seconds
+    };
 
     // Search predictions
     if (type === 'all' || type === 'predictions') {
       try {
-        const predictions = await predictionController.getAllPredictions();
-        const filteredPredictions = predictions
-          .filter((pred: any) => {
-            const matchesQuery = pred.title?.toLowerCase().includes(query.toLowerCase()) ||
-                                pred.content?.toLowerCase().includes(query.toLowerCase());
-            const matchesSport = sport === 'all' || pred.sport?.toLowerCase() === sport.toLowerCase();
-            return matchesQuery && matchesSport;
-          })
-          .slice(0, Math.floor(limit / 3))
-          .map((pred: any) => ({
-            id: pred.id || pred._id,
-            type: 'prediction',
-            title: pred.title,
-            content: pred.content,
-            author: pred.authorName || 'Unknown',
-            sport: pred.sport,
-            confidence: `${pred.confidence}%`,
-            publishDate: pred.createdAt || new Date().toISOString(),
-            source: 'internal'
-          }));
-        
-        results.push(...filteredPredictions);
+        const response = await fetch(
+          `${BACKEND_URL}/api/predictions?search=${encodeURIComponent(query)}&sport=${sport}&limit=${Math.floor(limit / 3)}`,
+          fetchOptions
+        );
+
+        if (response.ok) {
+          const predictions = await response.json();
+          const formattedPredictions = (Array.isArray(predictions) ? predictions : predictions.data || [])
+            .map((pred: any) => ({
+              id: pred.id || pred._id,
+              type: 'prediction',
+              title: pred.title,
+              content: pred.content,
+              author: pred.authorName || pred.author?.name || 'Unknown',
+              sport: pred.sport,
+              confidence: pred.confidence ? `${pred.confidence}%` : 'N/A',
+              publishDate: pred.createdAt || new Date().toISOString(),
+              source: 'internal'
+            }));
+
+          results.push(...formattedPredictions);
+        }
       } catch (error) {
         console.error('Error searching predictions:', error);
       }
@@ -65,29 +79,30 @@ export async function GET(request: NextRequest) {
     // Search authors
     if (type === 'all' || type === 'authors') {
       try {
-        const authors = await authorController.getAllAuthors();
-        const filteredAuthors = authors
-          .filter((author: any) => {
-            const matchesQuery = author.name?.toLowerCase().includes(query.toLowerCase()) ||
-                                author.bio?.toLowerCase().includes(query.toLowerCase());
-            const matchesSport = sport === 'all' || 
-                               author.expertise?.some((exp: string) => 
-                                 exp.toLowerCase().includes(sport.toLowerCase())
-                               );
-            return matchesQuery && matchesSport;
-          })
-          .slice(0, Math.floor(limit / 3))
-          .map((author: any) => ({
-            id: author.id,
-            type: 'author',
-            title: author.name,
-            content: author.bio,
-            expertise: author.expertise,
-            winRate: author.winRate || Math.round((author.stats?.correctPredictions / author.stats?.totalPredictions) * 100) || 0,
-            source: 'internal'
-          }));
-        
-        results.push(...filteredAuthors);
+        const response = await fetch(
+          `${BACKEND_URL}/api/authors?search=${encodeURIComponent(query)}&sport=${sport}&limit=${Math.floor(limit / 3)}`,
+          fetchOptions
+        );
+
+        if (response.ok) {
+          const authors = await response.json();
+          const formattedAuthors = (Array.isArray(authors) ? authors : authors.data || [])
+            .map((author: any) => ({
+              id: author.id || author._id,
+              type: 'author',
+              title: author.name,
+              content: author.bio || '',
+              expertise: author.expertise || [],
+              winRate: author.winRate || 
+                      (author.stats?.correctPredictions && author.stats?.totalPredictions 
+                        ? Math.round((author.stats.correctPredictions / author.stats.totalPredictions) * 100)
+                        : 0),
+              totalPredictions: author.stats?.totalPredictions || 0,
+              source: 'internal'
+            }));
+
+          results.push(...formattedAuthors);
+        }
       } catch (error) {
         console.error('Error searching authors:', error);
       }
@@ -96,51 +111,67 @@ export async function GET(request: NextRequest) {
     // Search articles/news
     if (type === 'all' || type === 'articles') {
       try {
-        const news = await NewsService.getAllNews();
-        const filteredNews = news
-          .filter((article: any) => {
-            const matchesQuery = article.title?.toLowerCase().includes(query.toLowerCase()) ||
-                               article.preview?.toLowerCase().includes(query.toLowerCase()) ||
-                               article.tags?.some((tag: string) => 
-                                 tag.toLowerCase().includes(query.toLowerCase())
-                               );
-            const matchesSport = sport === 'all' || 
-                               article.tags?.some((tag: string) => 
-                                 tag.toLowerCase().includes(sport.toLowerCase())
-                               );
-            return matchesQuery && matchesSport;
-          })
-          .slice(0, Math.floor(limit / 3))
-          .map((article: any) => ({
-            id: article.id,
-            type: 'article',
-            title: article.title,
-            content: article.preview || article.fullContent,
-            author: article.author,
-            tags: article.tags,
-            publishDate: article.createdAt,
-            source: 'internal'
-          }));
-        
-        results.push(...filteredNews);
+        const response = await fetch(
+          `${BACKEND_URL}/api/news?search=${encodeURIComponent(query)}&sport=${sport}&limit=${Math.floor(limit / 3)}`,
+          fetchOptions
+        );
+
+        if (response.ok) {
+          const news = await response.json();
+          const formattedNews = (Array.isArray(news) ? news : news.data || [])
+            .map((article: any) => ({
+              id: article.id || article._id,
+              type: 'article',
+              title: article.title,
+              content: article.preview || article.content || article.fullContent || '',
+              author: article.author?.name || article.authorName || 'Unknown',
+              tags: article.tags || [],
+              publishDate: article.createdAt || article.publishDate,
+              source: article.source || 'internal'
+            }));
+
+          results.push(...formattedNews);
+        }
       } catch (error) {
         console.error('Error searching news:', error);
       }
     }
 
     // Sort results by relevance (simple scoring based on title match)
+    const queryLower = query.toLowerCase();
     results.sort((a, b) => {
-      const aScore = a.title.toLowerCase().includes(query.toLowerCase()) ? 2 : 1;
-      const bScore = b.title.toLowerCase().includes(query.toLowerCase()) ? 2 : 1;
+      // Exact title match scores highest
+      const aExactMatch = a.title.toLowerCase() === queryLower ? 10 : 0;
+      const bExactMatch = b.title.toLowerCase() === queryLower ? 10 : 0;
+      
+      // Title contains query
+      const aTitleMatch = a.title.toLowerCase().includes(queryLower) ? 5 : 0;
+      const bTitleMatch = b.title.toLowerCase().includes(queryLower) ? 5 : 0;
+      
+      // Content contains query
+      const aContentMatch = a.content?.toLowerCase().includes(queryLower) ? 2 : 0;
+      const bContentMatch = b.content?.toLowerCase().includes(queryLower) ? 2 : 0;
+      
+      const aScore = aExactMatch + aTitleMatch + aContentMatch;
+      const bScore = bExactMatch + bTitleMatch + bContentMatch;
+      
       return bScore - aScore;
     });
 
+    // Apply final limit
+    const limitedResults = results.slice(0, limit);
+
     return NextResponse.json({
       success: true,
-      results: results.slice(0, limit),
+      results: limitedResults,
       total: results.length,
+      returned: limitedResults.length,
       query,
-      filters: { type, sport }
+      filters: { type, sport, limit }
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=59'
+      }
     });
 
   } catch (error) {
@@ -162,23 +193,56 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { query, filters = {}, advanced = {} } = body;
 
-    // Advanced search logic can be implemented here
-    // For now, redirect to GET with query params
+    if (!query || typeof query !== 'string' || !query.trim()) {
+      return NextResponse.json(
+        { error: 'Valid search query is required' },
+        { status: 400 }
+      );
+    }
+
+    // Build search parameters
     const searchParams = new URLSearchParams({
-      query,
+      query: query.trim(),
       type: filters.type || 'all',
       sport: filters.sport || 'all',
       limit: (filters.limit || 20).toString()
     });
 
-    const url = new URL(`${request.url}?${searchParams}`);
-    const getRequest = new NextRequest(url, { method: 'GET' });
+    // Forward advanced filters to backend
+    const authHeader = request.headers.get('authorization');
     
-    return GET(getRequest);
+    const response = await fetch(
+      `${BACKEND_URL}/api/search?${searchParams}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authHeader && { 'Authorization': authHeader })
+        },
+        body: JSON.stringify({
+          query,
+          filters,
+          advanced
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      return NextResponse.json(error, { status: response.status });
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
 
   } catch (error) {
+    console.error('Advanced search error:', error);
     return NextResponse.json(
-      { error: 'Invalid request body' },
+      { 
+        success: false,
+        error: 'Invalid request body',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 400 }
     );
   }
