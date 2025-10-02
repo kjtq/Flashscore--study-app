@@ -1,4 +1,4 @@
-app / predictions / page.tsx;
+//app / predictions / page.tsx;
 import { generatePredictions, getPredictions } from "@/app/actions/predictions";
 import PredictionsList from "@/components/PredictionsList";
 import GeneratePredictionsButton from "@/components/GeneratePredictionsButton";
