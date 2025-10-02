@@ -39,6 +39,9 @@
       "@config/*": [
         "config/*"
       ],
+      "@actions/*": [
+        "actions/*"
+      ],
       "@shared/types/*": [
         "../../../../packages/shared/src/libs/types/*"
       ],
