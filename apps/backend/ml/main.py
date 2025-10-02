@@ -1,32 +1,34 @@
-
 from fastapi import FastAPI, Body, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Union, Dict, Any
 import logging
+import os
+
 from magajico_predictor import MagajiCoMLPredictor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize ML predictor
-ml_predictor = MagajiCoMLPredictor()
+# --- Initialize ML predictor (try load trained model) ---
+MODEL_PATH = os.getenv("MAGAJICO_MODEL", "./ml/magajico_model.pkl")
+ml_predictor = MagajiCoMLPredictor(model_path=MODEL_PATH)
 
 # --- Initialize FastAPI app ---
 app = FastAPI(
     title="MagajiCo ML Prediction Service",
     description="AI-powered sports prediction engine",
-    version="2.0.0"
+    version="2.1.0"
 )
 
 # --- CORS configuration ---
 origins = [
     "http://localhost:3000",
-    "http://localhost:5000", 
+    "http://localhost:5000",
     "http://0.0.0.0:3000",
     "http://0.0.0.0:5000",
-    "*"  # Allow all origins for development
+    "*"  # Dev mode: allow all origins
 ]
 
 app.add_middleware(
@@ -41,7 +43,7 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     logger.info("🤖 MagajiCo ML Service starting up...")
-    logger.info("✅ ML Service ready for predictions")
+    logger.info(f"✅ Using model: {ml_predictor.get_model_info()}")
 
 # --- Health route ---
 @app.get("/health")
@@ -49,7 +51,7 @@ async def health():
     return {
         "status": "ok",
         "service": "MagajiCo ML Prediction Service",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "ready": True
     }
 
@@ -58,7 +60,7 @@ async def health():
 async def root():
     return {
         "message": "MagajiCo ML Prediction Service",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "endpoints": {
             "health": "/health",
             "predict": "/predict",
@@ -93,7 +95,7 @@ class SportsMatchFeatures(BaseModel):
 @app.post("/predict", response_model=PredictResponse)
 async def predict(data: Union[PredictRequest, SportsMatchFeatures, List[float]] = Body(...)):
     try:
-        # Process different input types
+        # Handle multiple input types
         if isinstance(data, SportsMatchFeatures):
             features = [
                 data.home_team_strength,
@@ -104,57 +106,37 @@ async def predict(data: Union[PredictRequest, SportsMatchFeatures, List[float]] 
                 data.head_to_head,
                 data.injuries_suspensions
             ]
-            match_details = {
-                "home_team_strength": data.home_team_strength,
-                "away_team_strength": data.away_team_strength,
-                "home_advantage": data.home_advantage
-            }
+            match_details = data.dict()
         elif isinstance(data, PredictRequest):
             features = data.features
-            match_details = {
-                "match_id": data.match_id,
-                "home_team": data.home_team,
-                "away_team": data.away_team
-            } if data.match_id else None
+            match_details = data.dict(exclude={"features"})
         elif isinstance(data, list):
             features = data
             match_details = None
         else:
-            features = []
-            match_details = None
+            raise HTTPException(status_code=400, detail="Invalid request format")
 
         if not features or len(features) < 7:
             raise HTTPException(status_code=400, detail="At least 7 features required for prediction")
 
-        # Use MagajiCo ML predictor
+        # Run prediction
         result = ml_predictor.predict(features)
-        
+
         logger.info(f"ML Prediction: {result['prediction']} with confidence: {result['confidence']}")
-        
+
         return PredictResponse(
-            prediction=result['prediction'],
-            confidence=result['confidence'],
-            probabilities=result['probabilities'],
-            model_version="MagajiCo-v2.0",
+            prediction=result["prediction"],
+            confidence=result["confidence"],
+            probabilities=result["probabilities"],
+            model_version=result["model_version"],
             match_details=match_details
         )
-    
+
     except Exception as e:
         logger.error(f"Prediction error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
-# --- Additional ML endpoints ---
-@app.get("/model/status")
-async def model_status():
-    return {
-        "model_loaded": True,
-        "model_version": "MagajiCo-v2.0",
-        "last_trained": "2024-01-01",
-        "accuracy": 0.87,
-        "features_required": 7,
-        "prediction_types": ["home", "draw", "away"]
-    }
-
+# --- Batch prediction route ---
 @app.post("/predict/batch")
 async def predict_batch(matches: List[SportsMatchFeatures]):
     try:
@@ -169,31 +151,37 @@ async def predict_batch(matches: List[SportsMatchFeatures]):
                 match.head_to_head,
                 match.injuries_suspensions
             ]
-            
             result = ml_predictor.predict(features)
             results.append({
-                "prediction": result['prediction'],
-                "confidence": result['confidence'],
-                "probabilities": result['probabilities']
+                "prediction": result["prediction"],
+                "confidence": result["confidence"],
+                "probabilities": result["probabilities"],
+                "model_version": result["model_version"]
             })
-        
+
         return {"predictions": results, "total_processed": len(results)}
-    
+
     except Exception as e:
         logger.error(f"Batch prediction error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Batch prediction failed: {str(e)}")
 
+# --- Model info ---
+@app.get("/model/status")
+async def model_status():
+    return ml_predictor.get_model_info()
+
+# --- Features template ---
 @app.get("/features/template")
 async def get_features_template():
     return {
         "features_template": {
-            "home_team_strength": "float (0.0-1.0) - Team's overall strength rating",
-            "away_team_strength": "float (0.0-1.0) - Away team's overall strength rating", 
-            "home_advantage": "float (0.0-1.0) - Home field advantage factor",
-            "recent_form_home": "float (0.0-1.0) - Recent performance of home team",
-            "recent_form_away": "float (0.0-1.0) - Recent performance of away team",
-            "head_to_head": "float (0.0-1.0) - Historical head-to-head performance",
-            "injuries_suspensions": "float (0.0-1.0) - Impact of injuries/suspensions"
+            "home_team_strength": "float (0.0-1.0)",
+            "away_team_strength": "float (0.0-1.0)",
+            "home_advantage": "float (0.0-1.0)",
+            "recent_form_home": "float (0.0-1.0)",
+            "recent_form_away": "float (0.0-1.0)",
+            "head_to_head": "float (0.0-1.0)",
+            "injuries_suspensions": "float (0.0-1.0)"
         },
         "example_request": {
             "home_team_strength": 0.75,
