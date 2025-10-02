@@ -1,152 +1,155 @@
 // apps/frontend/src/app/api/predictions/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { fetchPredictions } from "@services/predictionsService";
-import PredictionController from "@bcontrollers/predictionController";
 
-const predictionController = new PredictionController();
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://flashstudy-ri0g.onrender.com";
 
-// Placeholder for the actual visitor tracking logic
-// In a real application, this would interact with a database or cache
-// to store and retrieve visitor visit counts.
-async function checkVisitorAccess(visitorId: string, resource: string): Promise<{ allowed: boolean; message: string; upgradeRequired?: boolean; visitsRemaining?: number }> {
-  // Mock visitor data for demonstration
-  const visitorData: { [key: string]: { visits: number } } = {
-    'visitor123': { visits: 3 },
-    'visitor456': { visits: 5 },
-    'anonymous': { visits: 0 }
-  };
+// Visitor tracking in-memory (consider Redis/Database for production)
+const visitorData: Map<string, { visits: number; lastVisit: number }> = new Map();
 
-  const MAX_GUEST_VISITS = 4;
-  const MAX_USER_VISITS = 10; // Example for regular users
+const MAX_GUEST_VISITS = 4;
+const MAX_USER_VISITS = 10;
+const VISIT_RESET_TIME = 24 * 60 * 60 * 1000; // 24 hours
 
-  const currentVisitor = visitorData[visitorId] || { visits: 0 };
-  currentVisitor.visits++; // Increment visit count
+async function checkVisitorAccess(
+  visitorId: string, 
+  resource: string
+): Promise<{ 
+  allowed: boolean; 
+  message: string; 
+  upgradeRequired?: boolean; 
+  visitsRemaining?: number 
+}> {
+  const now = Date.now();
+  const visitor = visitorData.get(visitorId);
 
-  // Simulate updating visitor data (e.g., in a database)
-  visitorData[visitorId] = currentVisitor;
+  // Reset visits if 24 hours have passed
+  if (visitor && now - visitor.lastVisit > VISIT_RESET_TIME) {
+    visitorData.delete(visitorId);
+  }
+
+  const currentVisitor = visitorData.get(visitorId) || { visits: 0, lastVisit: now };
+  currentVisitor.visits++;
+  currentVisitor.lastVisit = now;
+  visitorData.set(visitorId, currentVisitor);
 
   if (resource === 'predictions') {
-    if (visitorId === 'anonymous') {
-      if (currentVisitor.visits <= MAX_GUEST_VISITS) {
-        return {
-          allowed: true,
-          message: `Welcome! You have ${MAX_GUEST_VISITS - currentVisitor.visits} visits remaining.`,
-          visitsRemaining: MAX_GUEST_VISITS - currentVisitor.visits
-        };
-      } else {
-        return {
-          allowed: false,
-          message: 'Guest access limit reached. Please upgrade or log in for full access.',
-          upgradeRequired: true,
-          visitsRemaining: 0
-        };
-      }
-    } else { // Assume logged-in users or identified visitors
-      if (currentVisitor.visits <= MAX_USER_VISITS) {
-        return {
-          allowed: true,
-          message: `Welcome back! You have ${MAX_USER_VISITS - currentVisitor.visits} visits remaining.`,
-          visitsRemaining: MAX_USER_VISITS - currentVisitor.visits
-        };
-      } else {
-        return {
-          allowed: false,
-          message: 'You have reached your visit limit. Consider upgrading your plan.',
-          upgradeRequired: true,
-          visitsRemaining: 0
-        };
-      }
+    const maxVisits = visitorId === 'anonymous' ? MAX_GUEST_VISITS : MAX_USER_VISITS;
+    
+    if (currentVisitor.visits <= maxVisits) {
+      return {
+        allowed: true,
+        message: `Welcome! You have ${maxVisits - currentVisitor.visits} visits remaining.`,
+        visitsRemaining: maxVisits - currentVisitor.visits
+      };
+    } else {
+      return {
+        allowed: false,
+        message: visitorId === 'anonymous' 
+          ? 'Guest access limit reached. Please upgrade or log in for full access.'
+          : 'You have reached your visit limit. Consider upgrading your plan.',
+        upgradeRequired: true,
+        visitsRemaining: 0
+      };
     }
   }
 
-  // Default access if resource is not specified or handled
   return { allowed: true, message: 'Access granted.' };
 }
 
+// Simple bot detection
+function detectBot(userAgent: string): boolean {
+  const botPatterns = ['bot', 'spider', 'crawler', 'scraper'];
+  return botPatterns.some(pattern => userAgent.toLowerCase().includes(pattern));
+}
+
+// Simple rate limiting (consider Redis for production)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 10; // requests
+const RATE_WINDOW = 60 * 1000; // 1 minute
+
+function checkRateLimit(ip: string): { allowed: boolean; message?: string } {
+  const now = Date.now();
+  const limit = rateLimitMap.get(ip);
+
+  if (!limit || now > limit.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_WINDOW });
+    return { allowed: true };
+  }
+
+  if (limit.count >= RATE_LIMIT) {
+    return { 
+      allowed: false, 
+      message: 'Too many requests - please slow down' 
+    };
+  }
+
+  limit.count++;
+  return { allowed: true };
+}
 
 export async function GET(request: NextRequest) {
   try {
-    // Enhanced bot detection and rate limiting
-    const clientIP = request.headers.get('x-forwarded-for') || 'unknown';
+    const clientIP = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     'unknown';
     const userAgent = request.headers.get('user-agent') || '';
     const visitorId = request.headers.get('x-visitor-id') || 'anonymous';
 
-    // Import security utilities
-    const SecurityUtils = (await import('@/../../packages/shared/src/libs/utils/securityUtils')).default;
-    const EthicalSecurityManager = (await import('@/../../packages/shared/src/libs/utils/ethicalSecurityManager')).default;
-
-    // Advanced rate limiting for this endpoint
-    const rateCheck = EthicalSecurityManager.checkAdvancedRateLimit(
-      clientIP,
-      'predictions_access'
-    );
-
+    // Rate limiting
+    const rateCheck = checkRateLimit(clientIP);
     if (!rateCheck.allowed) {
       return NextResponse.json(
-        { error: 'Too many requests - please slow down' },
+        { error: rateCheck.message },
         { status: 429 }
       );
     }
 
-    // Bot pattern detection
-    if (userAgent.includes('bot') || userAgent.includes('spider') || userAgent.includes('crawler')) {
-      SecurityUtils.logSecurityEvent('bot_access_attempt', {
-        ip: clientIP,
-        userAgent,
-        endpoint: '/api/predictions'
-      });
-
-      // Return limited data for bots
+    // Bot detection
+    if (detectBot(userAgent)) {
+      console.log('Bot detected:', { ip: clientIP, userAgent });
       return NextResponse.json({
         message: 'For full access, please use our official app',
         preview: ['Limited preview data available']
       }, { status: 200 });
     }
 
-    // Check visitor access level (server-side visitor tracking)
-    const visitorData = await checkVisitorAccess(visitorId, 'predictions');
-
-    if (!visitorData.allowed) {
+    // Check visitor access
+    const visitorAccess = await checkVisitorAccess(visitorId, 'predictions');
+    if (!visitorAccess.allowed) {
       return NextResponse.json({
         error: 'Access limit reached',
-        message: visitorData.message,
-        upgradeRequired: visitorData.upgradeRequired,
-        visitsRemaining: visitorData.visitsRemaining
+        message: visitorAccess.message,
+        upgradeRequired: visitorAccess.upgradeRequired,
+        visitsRemaining: visitorAccess.visitsRemaining
       }, { status: 403 });
     }
 
-    // Get external predictions (scraped)
-    const externalPredictions = await fetchPredictions();
+    // Fetch predictions from backend
+    const response = await fetch(`${BACKEND_URL}/api/predictions`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(request.headers.get('authorization') && {
+          'Authorization': request.headers.get('authorization')!
+        })
+      },
+      next: { revalidate: 60 } // Cache for 60 seconds
+    });
 
-    // Get internal predictions (MongoDB)
-    const internalPredictions = await predictionController.getAllPredictions();
+    if (!response.ok) {
+      throw new Error(`Backend returned ${response.status}`);
+    }
 
-    // Merge both
-    const allPredictions = [
-      ...internalPredictions.map((p: any) => ({
-        id: p._id.toString(),
-        title: p.title,
-        content: p.content,
-        source: "internal",
-        sport: p.sport,
-        confidence: `${p.confidence}%`,
-        status: p.status,
-        match: p.matchDetails ? `${p.matchDetails.home} vs ${p.matchDetails.away}` : "TBD",
-      })),
-      ...externalPredictions.map((p: any, index: number) => ({
-        id: `ext_${index}`,
-        title: p.title,
-        content: p.content || "External prediction analysis",
-        source: "external",
-        sport: p.sport || "Football",
-        confidence: p.confidence || "70%",
-        status: "active",
-        match: "External Match",
-      })),
-    ];
+    const predictions = await response.json();
 
-    return NextResponse.json(allPredictions, { status: 200 });
+    return NextResponse.json(predictions, { 
+      status: 200,
+      headers: {
+        'X-Visits-Remaining': visitorAccess.visitsRemaining?.toString() || '0'
+      }
+    });
+
   } catch (error) {
     console.error("Error fetching predictions:", error);
     return NextResponse.json(
@@ -159,8 +162,32 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const newPrediction = await predictionController.createPrediction(body);
+    const authHeader = request.headers.get('authorization');
+
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const response = await fetch(`${BACKEND_URL}/api/predictions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return NextResponse.json(error, { status: response.status });
+    }
+
+    const newPrediction = await response.json();
     return NextResponse.json(newPrediction, { status: 201 });
+
   } catch (error: any) {
     console.error("Error creating prediction:", error);
     return NextResponse.json(
@@ -182,8 +209,31 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const updatedPrediction = await predictionController.updatePrediction(id, data);
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const response = await fetch(`${BACKEND_URL}/api/predictions/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return NextResponse.json(error, { status: response.status });
+    }
+
+    const updatedPrediction = await response.json();
     return NextResponse.json(updatedPrediction, { status: 200 });
+
   } catch (error: any) {
     console.error("Error updating prediction:", error);
     return NextResponse.json(
@@ -205,8 +255,28 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await predictionController.deletePrediction(id);
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const response = await fetch(`${BACKEND_URL}/api/predictions/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': authHeader
+      }
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return NextResponse.json(error, { status: response.status });
+    }
+
     return new NextResponse(null, { status: 204 });
+
   } catch (error: any) {
     console.error("Error deleting prediction:", error);
     return NextResponse.json(
