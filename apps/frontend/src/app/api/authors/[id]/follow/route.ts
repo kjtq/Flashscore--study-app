@@ -1,47 +1,34 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextResponse } from "next/server";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  const { id } = req.query;
+export async function POST(req: Request, { params }: { params: { id: string } }) {
+  const { id } = params;
 
-  if (req.method === "POST") {
-    try {
-      // Call your backend API directly
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://flashstudy-ri0g.onrender.com";
-      
-      const response = await fetch(`${backendUrl}/api/authors/${id}/follow`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Include auth token if needed
-          ...(req.headers.authorization && {
-            "Authorization": req.headers.authorization
-          })
-        },
-        // Include any body data if needed
-        body: JSON.stringify({
-          // Add any necessary data
-        })
-      });
+  try {
+    const backendUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL || "https://flashstudy-ri0g.onrender.com";
 
-      if (!response.ok) {
-        const error = await response.json();
-        return res.status(response.status).json(error);
-      }
+    const response = await fetch(`${backendUrl}/api/authors/${id}/follow`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(req.headers.get("authorization") && {
+          Authorization: req.headers.get("authorization")!,
+        }),
+      },
+      body: JSON.stringify({}), // add request body if needed
+    });
 
-      const result = await response.json();
-      res.status(200).json(result);
-      
-    } catch (error) {
-      console.error("Error following author:", error);
-      res.status(500).json({ 
-        error: error instanceof Error ? error.message : "Failed to follow author" 
-      });
+    if (!response.ok) {
+      const error = await response.json();
+      return NextResponse.json(error, { status: response.status });
     }
-  } else {
-    res.setHeader("Allow", ["POST"]);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+
+    const result = await response.json();
+    return NextResponse.json(result, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to follow author" },
+      { status: 500 }
+    );
   }
 }
