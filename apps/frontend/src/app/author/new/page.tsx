@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function NewArticlePage() {
   const [hover, setHover] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState("");
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,21 +21,23 @@ export default function NewArticlePage() {
       tags: tags.split(",").map((t) => t.trim()),
     });
 
+    // Success → redirect back
     alert("✅ Article submitted successfully!");
-    setTitle("");
-    setContent("");
-    setTags("");
+    router.push("/author");
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hover Menu */}
       <div
-        className="relative bg-white shadow p-4"
+        className="relative bg-white shadow p-4 flex justify-between items-center"
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
       >
         <h1 className="text-2xl font-bold">Publish New Article</h1>
+        <Link href="/author" className="text-blue-600 hover:underline">
+          ⬅ Back to Dashboard
+        </Link>
         {hover && (
           <div className="absolute left-0 top-full w-full bg-white shadow-md flex justify-around p-4 z-50">
             <Link href="/">🏠 Home</Link>
@@ -76,9 +80,7 @@ export default function NewArticlePage() {
 
           {/* Tags */}
           <div>
-            <label className="block font-medium mb-1">
-              Tags (comma separated)
-            </label>
+            <label className="block font-medium mb-1">Tags (comma separated)</label>
             <input
               type="text"
               value={tags}
