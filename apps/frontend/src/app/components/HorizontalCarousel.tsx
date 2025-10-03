@@ -1,4 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
+
+interface Card {
+  id: string;
+  title: string;
+  subtitle: string;
+  value: string;
+  gradient: string;
+  bgGradient: string;
+  icon: string;
+  action: () => void;
+  priority: number;
+  show: boolean;
+}
 
 // Strategic Horizontal Carousel - Only Critical Features
 export default function HorizontalCarousel() {
@@ -15,11 +29,11 @@ export default function HorizontalCarousel() {
         // Example: const response = await fetch('/api/dashboard/quick-stats');
         // const data = await response.json();
         
-        // Mock values for now
-        setLiveMatches(3);
-        setTodayPredictions(12);
-        setPiBalance(245.8);
-        setUserRank(142);
+        // Mock values for demonstration - VISIBLE DATA
+        setLiveMatches(5);
+        setTodayPredictions(18);
+        setPiBalance(342.5);
+        setUserRank(89);
       } catch (error) {
         console.error('Error fetching carousel data:', error);
       }
@@ -28,7 +42,7 @@ export default function HorizontalCarousel() {
     fetchData();
   }, []);
 
-  const criticalCards = [
+  const criticalCards: Card[] = [
     {
       id: 'live-matches',
       title: "Live Matches",
@@ -114,17 +128,27 @@ export default function HorizontalCarousel() {
 
       {/* Horizontal Scrolling Container */}
       <div className="relative -mx-6 px-6">
-        <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide">
+        <div 
+          className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          }}
+        >
           {visibleCards.map((card, index) => (
             <button
               key={card.id}
               onClick={card.action}
-              className="min-w-[160px] flex-shrink-0 snap-start animate-slide-in-elegant focus:outline-none focus:ring-2 focus:ring-blue-500/50 rounded-xl"
-              style={{ animationDelay: `${index * 50}ms` }}
+              className="min-w-[160px] flex-shrink-0 snap-start focus:outline-none focus:ring-2 focus:ring-blue-500/50 rounded-xl transition-all duration-300"
+              style={{ 
+                animationDelay: `${index * 50}ms`,
+                animation: 'slideInUp 0.5s ease-out forwards',
+                opacity: 0
+              }}
               aria-label={`${card.title}: ${card.value}`}
             >
               {/* Glass Card with Gradient */}
-              <div className="glass-card p-4 hover-lift group cursor-pointer h-full relative overflow-hidden transition-all duration-300">
+              <div className="backdrop-blur-md bg-white/15 border-2 border-white/30 p-4 rounded-xl hover:scale-105 hover:bg-white/20 group cursor-pointer h-full relative overflow-hidden transition-all duration-300 shadow-xl">
                 {/* Gradient Background Effect */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-40 group-hover:opacity-60 transition-opacity duration-300`}></div>
                 
@@ -134,7 +158,7 @@ export default function HorizontalCarousel() {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-2xl">{card.icon}</span>
                     {card.id === 'live-matches' && (
-                      <div className={`w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-lg shadow-red-500/50`}></div>
+                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-lg shadow-red-500/50"></div>
                     )}
                   </div>
 
@@ -170,13 +194,21 @@ export default function HorizontalCarousel() {
         )}
       </div>
 
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
+      <style jsx global>{`
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+
+        /* Hide scrollbar for webkit browsers */
+        .overflow-x-auto::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>

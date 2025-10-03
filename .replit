@@ -3,11 +3,11 @@ run = "cd apps/frontend && npm run dev"
 
 [nix]
 channel = "stable-25_05"
-packages = ["miktex", "nix-output-monitor", "try"]
+packages = ["miktex", "nix-output-monitor", "try", "pnpm"]
 
 [deployment]
-run = ["bash", "-c", "cd apps/frontend && pnpm run start"]
-build = ["bash", "-c", "pnpm install && cd apps/frontend && pnpm run build"]
+run = ["bash", "-c", "cd apps/frontend && pnpm start"]
+build = ["bash", "-c", "pnpm install && cd apps/frontend && pnpm build"]
 deploymentTarget = "autoscale"
 
 [workflows]
@@ -287,6 +287,10 @@ externalPort = 8000
 [[ports]]
 localPort = 37807
 externalPort = 3001
+
+[[ports]]
+localPort = 44397
+externalPort = 3002
 
 [agent]
 expertMode = true

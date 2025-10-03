@@ -8,21 +8,21 @@ The application is designed as a full-stack platform featuring real-time sports 
 
 ## Recent Changes
 
-### Replit Environment Setup (October 2, 2025)
+### Replit Environment Setup (October 3, 2025)
 - Successfully configured monorepo for Replit environment with pnpm workspaces
 - All dependencies installed using pnpm (root, frontend, backend, shared packages)
 - **Node.js 20** and **Python 3.11** modules installed
+- **pnpm** installed via Nix system packages
 - Python ML dependencies installed (FastAPI, scikit-learn, pandas, etc.)
 - Frontend running on port 5000 (0.0.0.0) for public access through Replit proxy
 - Backend API running on port 3001 (localhost) for internal API calls
-- ML service running on port 8000 (0.0.0.0) for prediction endpoints
-- Next.js configured with `allowedDevOrigins: ['*']` for Replit proxy support
-- TypeScript backend configuration fixed with Node.js type definitions
-- Created start-dev.sh script to run frontend, backend, and ML services together
-- Workflow configured to start all services with frontend on port 5000
+- ML service running on port 8000 (localhost) for prediction endpoints
+- Created Next.js config file with cache-control headers for Replit proxy
+- Fixed globals.css import path in layout.tsx
+- Workflow configured to run start-dev.sh (starts all three services)
 - Deployment configured for **autoscale** (stateless Next.js deployment)
-- .gitignore updated with Node.js and Python-specific entries
-- Application successfully tested and running in Replit environment
+- .gitignore already includes comprehensive Node.js and Python entries
+- Application successfully tested and verified working in Replit environment
 
 ### Important Notes
 - **Database**: MongoDB connection is optional - backend will run without it but with limited functionality

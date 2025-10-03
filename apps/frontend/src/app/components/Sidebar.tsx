@@ -3,9 +3,15 @@ import React, { useState } from "react";
 import Link from "next/link";
 
 const Sidebar: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  // Start minimized by default on smaller screens
+  const [isOpen, setIsOpen] = useState(false);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
+  
+  // Hide completely on mobile (< 768px)
+  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    return null;
+  }
 
   return (
     <aside

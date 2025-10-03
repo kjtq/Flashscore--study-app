@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import HorizontalCarousel from "../components/HorizontalCarousel";
 
 interface Prediction {
   id: string;
@@ -65,6 +66,11 @@ export default function PredictionsPage() {
             {viewMode === "optimized" ? "Switch to Standard" : "Switch to Optimized"}
           </button>
         </div>
+      </div>
+
+      {/* Quick Actions Carousel */}
+      <div className="my-6">
+        <HorizontalCarousel />
       </div>
 
       {loading && <p className="text-gray-500">Loading...</p>}

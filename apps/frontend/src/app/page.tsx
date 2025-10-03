@@ -2,7 +2,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import Navbar from "./components/NavBar";
+import IOSInterface from "./components/iOSInterface";
+import AppDrawer from "./components/AppDrawer";
 
 // Mock data (replace with MongoDB later)
 const latestNews = [
@@ -20,66 +22,58 @@ const predictions = [
 ];
 
 export default function HomePage() {
-  const [hover, setHover] = useState(false);
-
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Hover Menu */}
-      <div
-        className="relative bg-white shadow p-4"
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-      >
-        <h1 className="text-2xl font-bold">Sports Central</h1>
-        {hover && (
-          <div className="absolute left-0 top-full w-full bg-white shadow-md flex justify-around p-4 z-50">
-            <Link href="/">🏠 Home</Link>
-            <Link href="/news">📰 News</Link>
-            <Link href="/predictions">📊 Predictions</Link>
-            <Link href="/archive">📂 Archive</Link>
-            <Link href="/author">✍️ Author</Link>
-          </div>
-        )}
+    <IOSInterface showStatusBar={true} enableHapticFeedback={true}>
+      <div className="min-h-screen bg-gray-100">
+        {/* App Drawer */}
+        <AppDrawer />
+        
+        {/* NavBar Component */}
+        <Navbar />
+
+        {/* Add top padding to account for fixed navbar */}
+        <div className="pt-16">
+        {/* Welcome Banner */}
+        <div className="p-6 text-center bg-gradient-to-r from-blue-500/10 to-green-500/10 rounded-lg mx-4 mt-4">
+          <h2 className="text-3xl font-semibold">Welcome to Sports Central</h2>
+          <p className="text-gray-600">Get the latest sports news and predictions in one place.</p>
+          <p className="text-sm text-gray-500 mt-2">Click the apps menu (⋮⋮⋮) in the top right to explore all features</p>
+        </div>
+
+        {/* Latest News */}
+        <section className="p-6">
+          <h3 className="text-xl font-bold mb-3">📰 Latest News</h3>
+          {latestNews.map((news) => (
+            <div key={news.id} className="p-3 bg-white shadow mb-2 rounded-lg">
+              <h4>{news.title}</h4>
+              <p className="text-sm text-gray-500">{news.date}</p>
+            </div>
+          ))}
+        </section>
+
+        {/* Predictions */}
+        <section className="p-6">
+          <h3 className="text-xl font-bold mb-3">📊 Predictions</h3>
+          {predictions.map((p) => (
+            <div key={p.id} className="p-3 bg-blue-50 shadow mb-2 rounded-lg">
+              <h4>{p.match}</h4>
+              <p>{p.prediction} ({p.confidence})</p>
+            </div>
+          ))}
+        </section>
+
+        {/* Archive */}
+        <section className="p-6">
+          <h3 className="text-xl font-bold mb-3">📂 Archive</h3>
+          {archivedNews.map((news) => (
+            <div key={news.id} className="p-3 bg-gray-200 shadow mb-2 rounded-lg">
+              <h4>{news.title}</h4>
+              <p className="text-sm text-gray-500">{news.date}</p>
+            </div>
+          ))}
+        </section>
       </div>
-
-      {/* Welcome Banner */}
-      <div className="p-6 text-center">
-        <h2 className="text-3xl font-semibold">Welcome to Sports Central</h2>
-        <p className="text-gray-600">Get the latest sports news and predictions in one place.</p>
-      </div>
-
-      {/* Latest News */}
-      <section className="p-6">
-        <h3 className="text-xl font-bold mb-3">📰 Latest News</h3>
-        {latestNews.map((news) => (
-          <div key={news.id} className="p-3 bg-white shadow mb-2 rounded-lg">
-            <h4>{news.title}</h4>
-            <p className="text-sm text-gray-500">{news.date}</p>
-          </div>
-        ))}
-      </section>
-
-      {/* Predictions */}
-      <section className="p-6">
-        <h3 className="text-xl font-bold mb-3">📊 Predictions</h3>
-        {predictions.map((p) => (
-          <div key={p.id} className="p-3 bg-blue-50 shadow mb-2 rounded-lg">
-            <h4>{p.match}</h4>
-            <p>{p.prediction} ({p.confidence})</p>
-          </div>
-        ))}
-      </section>
-
-      {/* Archive */}
-      <section className="p-6">
-        <h3 className="text-xl font-bold mb-3">📂 Archive</h3>
-        {archivedNews.map((news) => (
-          <div key={news.id} className="p-3 bg-gray-200 shadow mb-2 rounded-lg">
-            <h4>{news.title}</h4>
-            <p className="text-sm text-gray-500">{news.date}</p>
-          </div>
-        ))}
-      </section>
     </div>
+    </IOSInterface>
   );
 }
