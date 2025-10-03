@@ -1,65 +1,85 @@
+// apps/frontend/src/app/page.tsx
 "use client";
-import { useEffect, useState } from "react";
 
-interface NewsItem {
-  id: string;
-  title: string;
-  link: string;
-  date: string;
-}
+import Link from "next/link";
+import { useState } from "react";
+
+// Mock data (replace with MongoDB later)
+const latestNews = [
+  { id: 1, title: "Fresh Match Update", date: "2025-10-01" },
+  { id: 2, title: "Team A beats Team B", date: "2025-10-02" },
+];
+
+const archivedNews = [
+  { id: 3, title: "Old Transfer Rumors", date: "2025-09-25" },
+];
+
+const predictions = [
+  { id: 1, match: "Team X vs Team Y", prediction: "Team X wins", confidence: "78%" },
+  { id: 2, match: "Team Z vs Team W", prediction: "Draw", confidence: "65%" },
+];
 
 export default function HomePage() {
-  const [news, setNews] = useState<NewsItem[]>([]);
-
-  useEffect(() => {
-    async function fetchNews() {
-      try {
-        const res = await fetch("/api/news"); // 🔗 Hook into backend news API
-        if (res.ok) {
-          const data = await res.json();
-          setNews(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch news:", error);
-      }
-    }
-    fetchNews();
-  }, []);
+  const [hover, setHover] = useState(false);
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6">
-      {/* Welcome Header */}
-      <h1 className="text-4xl font-bold text-green-600 mb-2">Sports Central</h1>
-      <p className="text-gray-600 mb-8">
-        ⚽🏀🎾 Your hub for predictions, analytics & live sports news
-      </p>
-
-      {/* News Feed Section */}
-      <section className="w-full max-w-2xl">
-        <h2 className="text-2xl font-semibold mb-4">Latest News</h2>
-        {news.length === 0 ? (
-          <p className="text-gray-500">Loading news...</p>
-        ) : (
-          <ul className="space-y-3">
-            {news.map((item) => (
-              <li
-                key={item.id}
-                className="p-4 border rounded-lg hover:bg-gray-100 transition"
-              >
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-600 font-medium"
-                >
-                  {item.title}
-                </a>
-                <p className="text-sm text-gray-500">{item.date}</p>
-              </li>
-            ))}
-          </ul>
+    <div className="min-h-screen bg-gray-100">
+      {/* Hover Menu */}
+      <div
+        className="relative bg-white shadow p-4"
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+      >
+        <h1 className="text-2xl font-bold">Sports Central</h1>
+        {hover && (
+          <div className="absolute left-0 top-full w-full bg-white shadow-md flex justify-around p-4 z-50">
+            <Link href="/">🏠 Home</Link>
+            <Link href="/news">📰 News</Link>
+            <Link href="/predictions">📊 Predictions</Link>
+            <Link href="/archive">📂 Archive</Link>
+            <Link href="/author">✍️ Author</Link>
+          </div>
         )}
+      </div>
+
+      {/* Welcome Banner */}
+      <div className="p-6 text-center">
+        <h2 className="text-3xl font-semibold">Welcome to Sports Central</h2>
+        <p className="text-gray-600">Get the latest sports news and predictions in one place.</p>
+      </div>
+
+      {/* Latest News */}
+      <section className="p-6">
+        <h3 className="text-xl font-bold mb-3">📰 Latest News</h3>
+        {latestNews.map((news) => (
+          <div key={news.id} className="p-3 bg-white shadow mb-2 rounded-lg">
+            <h4>{news.title}</h4>
+            <p className="text-sm text-gray-500">{news.date}</p>
+          </div>
+        ))}
       </section>
-    </main>
+
+      {/* Predictions */}
+      <section className="p-6">
+        <h3 className="text-xl font-bold mb-3">📊 Predictions</h3>
+        {predictions.map((p) => (
+          <div key={p.id} className="p-3 bg-blue-50 shadow mb-2 rounded-lg">
+            <h4>{p.match}</h4>
+            <p>{p.prediction} ({p.confidence})</p>
+          </div>
+        ))}
+      </section>
+
+      {/* Archive */}
+      <section className="p-6">
+        <h3 className="text-xl font-bold mb-3">📂 Archive</h3>
+        {archivedNews.map((news) => (
+          <div key={news.id} className="p-3 bg-gray-200 shadow mb-2 rounded-lg">
+            <h4>{news.title}</h4>
+            <p className="text-sm text-gray-500">{news.date}</p>
+          </div>
+        ))}
+      </section>
+    </div>
   );
 }
