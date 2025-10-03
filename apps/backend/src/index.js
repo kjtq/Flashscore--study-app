@@ -1,15 +1,16 @@
-
-const express = require("express");
-const cors = require("cors");
-const apiRoutes = require("./routes/api");
+import express from "express";
+import mongoose from "mongoose";
+import newsRoutes from "./routes/news";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
 app.use(express.json());
-app.use("/api", apiRoutes);
 
-app.get("/", (req, res) => res.send("Backend Express server running"));
+// MongoDB connection
+mongoose.connect("mongodb://127.0.0.1:27017/sportscentral");
 
-app.listen(PORT, () => console.log(`Express server listening on port ${PORT}`));
+// Routes
+app.use("/news", newsRoutes);
+
+app.listen(3000, () => {
+  console.log("Backend running on http://localhost:3000");
+});
