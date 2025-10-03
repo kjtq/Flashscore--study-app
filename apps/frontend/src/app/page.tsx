@@ -1,96 +1,103 @@
-"use client";
+'use client';
+
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-interface Prediction {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  prediction: string;
-  confidence: number;
-}
+const navItems = [
+  { label: "Analytics", href: "/management/analytics" },
+  { label: "Content", href: "/management/content" },
+  { label: "Notifications", href: "/management/notifications" },
+  { label: "Payments", href: "/management/payments" },
+  { label: "Predictions", href: "/management/predictions" },
+  { label: "Settings", href: "/management/settings" },
+  { label: "Users", href: "/management/users" },
+];
 
-export default function PredictionsPage() {
-  const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"optimized" | "standard">(
-    () => (localStorage.getItem("viewMode") as "optimized" | "standard") || "optimized"
-  );
+export default function HomePage() {
+  const pathname = usePathname();
+  const [news, setNews] = useState<any[]>([]);
 
-  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-  const refreshInterval = isMobile ? 30000 : 60000;
-
-  const fetchPredictions = async () => {
-    try {
-      setError(null);
-      setLoading(true);
-      const res = await fetch("/api/predictions");
-      if (!res.ok) throw new Error("Failed to fetch predictions");
-      const data = await res.json();
-      setPredictions(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Fetch latest news (placeholder API)
   useEffect(() => {
-    fetchPredictions();
-    const interval = setInterval(fetchPredictions, refreshInterval);
-    return () => clearInterval(interval);
+    async function fetchNews() {
+      try {
+        const res = await fetch("/api/news"); // 👈 hook to your backend/news service
+        if (!res.ok) return;
+        const data = await res.json();
+        setNews(data.slice(0, 5)); // show top 5
+      } catch (err) {
+        console.error("News fetch failed:", err);
+      }
+    }
+    fetchNews();
   }, []);
 
-  const toggleView = () => {
-    const next = viewMode === "optimized" ? "standard" : "optimized";
-    setViewMode(next);
-    localStorage.setItem("viewMode", next);
-  };
-
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Live Predictions</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={fetchPredictions}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Refresh Now
-          </button>
-          <button
-            onClick={toggleView}
-            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800"
-          >
-            {viewMode === "optimized" ? "Switch to Standard" : "Switch to Optimized"}
-          </button>
+    <div className="min-h-screen flex flex-col">
+      {/* 🔹 Top Navigation Bar */}
+      <nav className="sticky top-0 z-50 bg-white shadow-md border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-14">
+          <div className="text-xl font-bold text-blue-600">Sports Central</div>
+          <div className="flex space-x-6">
+            {navItems.map((item) => {
+              const active = pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`text-sm font-medium hover:text-blue-500 ${
+                    active ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-700"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </nav>
 
-      {loading && <p className="text-gray-500">Loading...</p>}
-      {error && <p className="text-red-500">⚠ {error}</p>}
-
-      <ul className="space-y-3">
-        {predictions.map((p) => (
-          <li key={p.id} className="p-4 bg-white shadow rounded-lg">
-            <p className="font-semibold">
-              {p.homeTeam} vs {p.awayTeam}
-            </p>
-            <p>
-              Prediction: <span className="font-medium">{p.prediction}</span>
-            </p>
-            <p className="text-sm text-gray-500">Confidence: {p.confidence}%</p>
-          </li>
-        ))}
-      </ul>
-
-      {viewMode === "standard" && (
-        <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-          <h2 className="font-bold mb-2">System Health</h2>
-          <p className="text-gray-600">✅ All systems operational</p>
-          {/* Replace with live system health component */}
+      {/* 🔹 Welcome Section */}
+      <main className="flex-grow flex flex-col items-center justify-center bg-gray-50 px-6 py-12">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">
+            Welcome to Sports Central ⚽🏀🎾
+          </h1>
+          <p className="text-gray-600">
+            Navigate through <strong>Predictions, Analytics, Content</strong> and more from the menu above.
+          </p>
         </div>
-      )}
+
+        {/* 🔹 News Section */}
+        <section className="w-full max-w-3xl bg-white rounded-xl shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Latest Sports News 📰</h2>
+          {news.length === 0 ? (
+            <p className="text-gray-500">No news available.</p>
+          ) : (
+            <ul className="space-y-3">
+              {news.map((n, idx) => (
+                <li key={idx} className="border-b last:border-0 pb-2">
+                  <a
+                    href={n.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {n.title}
+                  </a>
+                  <p className="text-sm text-gray-500">{n.date}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </main>
+
+      {/* 🔹 Footer */}
+      <footer className="bg-white border-t py-4 text-center text-sm text-gray-500">
+        © {new Date().getFullYear()} Sports Central. All rights reserved.
+      </footer>
     </div>
   );
 }
