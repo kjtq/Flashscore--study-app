@@ -33,36 +33,36 @@ const quickMenuItems = [
 
 export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [showHoverMenu, setShowHoverMenu] = useState(false);
 
   return (
     <nav className="bg-[#0a0e1a] text-white shadow-md fixed top-0 w-full z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo with Hover Menu */}
-          <div 
-            className="flex-shrink-0 flex items-center relative"
-            onMouseEnter={() => setShowHoverMenu(true)}
-            onMouseLeave={() => setShowHoverMenu(false)}
-          >
-            <a href="/" className="text-green-400 font-bold text-xl cursor-pointer">
+          <div className="flex-shrink-0 flex items-center relative group">
+            <a 
+              href="/" 
+              className="text-green-400 font-bold text-xl cursor-pointer hover:text-green-300 transition-colors"
+              onClick={(e) => {
+                // Allow navigation
+                window.location.href = '/';
+              }}
+            >
               ⚡ Sports Central
             </a>
             
-            {/* Hover Menu */}
-            {showHoverMenu && (
-              <div className="absolute left-0 top-full mt-2 bg-[#1f2937] rounded-md shadow-lg overflow-hidden z-50 min-w-[200px]">
-                {quickMenuItems.map((item) => (
-                  <a
-                    key={item.link}
-                    href={item.link}
-                    className="block px-4 py-2 text-sm hover:bg-green-500 hover:text-white transition cursor-pointer"
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </div>
-            )}
+            {/* Hover Menu - Only shows on hover */}
+            <div className="absolute left-0 top-full mt-2 bg-[#1f2937] rounded-md shadow-lg overflow-hidden z-50 min-w-[200px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              {quickMenuItems.map((item) => (
+                <a
+                  key={item.link}
+                  href={item.link}
+                  className="block px-4 py-2 text-sm hover:bg-green-500 hover:text-white transition cursor-pointer"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
           </div>
 
           {/* Menu Items */}
