@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import HorizontalCarousel from "../components/HorizontalCarousel";
 
 interface Prediction {
   id: string;
@@ -66,6 +67,9 @@ export default function PredictionsPage() {
           </button>
         </div>
       </div>
+
+      {/* Quick Actions Carousel */}
+      <HorizontalCarousel />
 
       {loading && <p className="text-gray-500">Loading...</p>}
       {error && <p className="text-red-500">⚠ {error}</p>}
