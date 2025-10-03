@@ -11,7 +11,7 @@ import MobileAdvancedFeatures from "./components/MobileAdvancedFeatures";
 import AdvancedAnalytics from "./components/AdvancedAnalytics";
 import OptimizedDashboard from "./components/OptimizedDashboard";
 import PerformanceOptimizer from "./components/PerformanceOptimizer";
-
+import HorizontalCarousel from "./components/HorizontalCarousel";
 export default function HomePage() {
   const [backendStatus, setBackendStatus] = useState("checking...");
   const [isLoaded, setIsLoaded] = useState(false);
@@ -147,29 +147,13 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-
-            {/* Quick Actions - Streamlined */}
-            <div className="glass-card p-6 hover-lift group">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-xl">
-                  ⚡
-                </div>
-                <h2 className="text-xl font-bold">Quick Actions</h2>
-              </div>
-              <div className="space-y-3">
-                <button className="w-full ios-button bg-gradient-to-r from-blue-600 to-blue-700 py-2 text-sm">
-                  🔮 View Predictions
-                </button>
-                <button className="w-full ios-button bg-gradient-to-r from-green-600 to-green-700 py-2 text-sm">
-                  💰 Pi Wallet
-                </button>
-                <button className="w-full ios-button bg-gradient-to-r from-purple-600 to-purple-700 py-2 text-sm">
-                  🏆 Leaderboard
-                </button>
-              </div>
+     
+            {/* Quick Actions - Horizontal Carousel */}
+            <div className="md:col-span-1">
+              <HorizontalCarousel />
             </div>
-          </div>
-
+        
+ 
           {/* Main Content Grid - Lazy loaded */}
           <div className="grid gap-8 grid-cols-1 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
