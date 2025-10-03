@@ -29,11 +29,11 @@ export default function HorizontalCarousel() {
         // Example: const response = await fetch('/api/dashboard/quick-stats');
         // const data = await response.json();
         
-        // Mock values for now
-        setLiveMatches(3);
-        setTodayPredictions(12);
-        setPiBalance(245.8);
-        setUserRank(142);
+        // Mock values for demonstration - VISIBLE DATA
+        setLiveMatches(5);
+        setTodayPredictions(18);
+        setPiBalance(342.5);
+        setUserRank(89);
       } catch (error) {
         console.error('Error fetching carousel data:', error);
       }
@@ -148,7 +148,7 @@ export default function HorizontalCarousel() {
               aria-label={`${card.title}: ${card.value}`}
             >
               {/* Glass Card with Gradient */}
-              <div className="backdrop-blur-md bg-white/10 border border-white/20 p-4 rounded-xl hover:scale-105 hover:bg-white/15 group cursor-pointer h-full relative overflow-hidden transition-all duration-300 shadow-lg">
+              <div className="backdrop-blur-md bg-white/15 border-2 border-white/30 p-4 rounded-xl hover:scale-105 hover:bg-white/20 group cursor-pointer h-full relative overflow-hidden transition-all duration-300 shadow-xl">
                 {/* Gradient Background Effect */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-40 group-hover:opacity-60 transition-opacity duration-300`}></div>
                 

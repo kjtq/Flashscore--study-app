@@ -69,7 +69,9 @@ export default function PredictionsPage() {
       </div>
 
       {/* Quick Actions Carousel */}
-      <HorizontalCarousel />
+      <div className="my-6">
+        <HorizontalCarousel />
+      </div>
 
       {loading && <p className="text-gray-500">Loading...</p>}
       {error && <p className="text-red-500">⚠ {error}</p>}
