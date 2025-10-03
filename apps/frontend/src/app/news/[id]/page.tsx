@@ -1,0 +1,48 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+
+interface NewsItem {
+  _id: string;
+  title: string;
+  content: string;
+  author: string;
+  publishedAt: string;
+}
+
+export default function NewsDetails() {
+  const { id } = useParams();
+  const [news, setNews] = useState<NewsItem | null>(null);
+
+  useEffect(() => {
+    if (id) {
+      fetch(`http://localhost:5000/news/${id}`)
+        .then((res) => res.json())
+        .then((data) => setNews(data));
+    }
+  }, [id]);
+
+  if (!news) return <div className="p-6">Loading...</div>;
+
+  const daysAgo =
+    (new Date().getTime() - new Date(news.publishedAt).getTime()) /
+    (1000 * 60 * 60 * 24);
+
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-2">{news.title}</h1>
+      <p className="text-sm text-gray-500">
+        By {news.author} • {new Date(news.publishedAt).toDateString()}
+      </p>
+
+      <div className="mt-6 text-lg leading-relaxed">{news.content}</div>
+
+      {daysAgo > 4 && (
+        <div className="mt-6 p-4 bg-yellow-50 border rounded-lg text-gray-600">
+          📖 This article is now in the <b>Reader Archive</b>. You’re viewing an
+          older publication.
+        </div>
+      )}
+    </div>
+  );
+}
