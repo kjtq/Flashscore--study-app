@@ -1,24 +1,26 @@
-import { FastifyInstance } from "fastify";
+// apps/backend/src/routes/health.ts
+import { FastifyInstance } from 'fastify';
+import mongoose from 'mongoose';
+import fetch from 'node-fetch';
 
-export async function healthRoutes(server: FastifyInstance) {
-  server.get("/health", async (request, reply) => {
-    const healthData = {
-      status: "healthy",
-      timestamp: new Date().toISOString(),
+export async function healthRoutes(fastify: FastifyInstance) {
+  fastify.get('/health', async () => {
+    // DB check
+    const dbStatus = mongoose.connection.readyState === 1 ? 'ok' : 'down';
+
+    // ML check (assuming ml_service runs on port 8000)
+    let mlStatus = 'down';
+    try {
+      const res = await fetch('http://ml_service:8000/health');
+      if (res.ok) mlStatus = 'ok';
+    } catch (err) {}
+
+    return {
+      api: 'ok',
+      db: dbStatus,
+      ml: mlStatus,
       uptime: process.uptime(),
-      memory: {
-        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
-        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
-      },
-      environment: process.env.NODE_ENV || 'development',
-      version: "1.0.0",
-      services: {
-        database: "checking...", // Will be updated when DB is connected
-        scraper: "operational",
-        predictions: "operational"
-      }
+      timestamp: new Date().toISOString(),
     };
-    
-    return healthData;
   });
 }
