@@ -10,6 +10,8 @@ const nextConfig = {
   reactStrictMode: true,
   compress: true,
 
+  allowedDevOrigins: ['*'],
+
   images: {
     formats: ["image/webp", "image/avif"],
   },
