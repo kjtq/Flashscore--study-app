@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FiMenu, FiX, FiHome, FiUsers, FiBookOpen, FiStar, FiWallet, FiMoreHorizontal } from "react-icons/fi";
 import { menuItems } from "../../config/menuItems";
 
-// Mapping ids to icons
+// Map menu item IDs to icons. You can customize/add more as needed!
 const iconMap: Record<string, React.ReactNode> = {
   home: <FiHome />,
   news: <FiBookOpen />,
@@ -17,10 +17,9 @@ const NavBar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [submenuOpen, setSubmenuOpen] = useState<string | null>(null);
 
-  // Responsive breakpoint
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-
+  // Toggle mobile menu
   const handleMenuToggle = () => setMenuOpen((open) => !open);
+  // Toggle submenus (mobile only)
   const handleSubmenuToggle = (id: string) =>
     setSubmenuOpen((open) => (open === id ? null : id));
 
