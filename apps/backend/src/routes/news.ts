@@ -1,77 +1,34 @@
-// apps/backend/src/routes/newsAuthors.ts
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import express from "express";
+import News from "../models/News";
 
-// Define proper interfaces
-interface CreateAuthorBody {
-  id: string;
-  name: string;
-  icon: string;
-  bio?: string;
-  expertise?: string[];
-}
+const router = express.Router();
 
-interface CreateCollaborationParams {
-  id: string;
-}
+// Create news
+router.post("/", async (req, res) => {
+  try {
+    const news = new News(req.body);
+    await news.save();
+    res.status(201).json(news);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
-interface CreateCollaborationBody {
-  title: string;
-  preview: string;
-  fullContent: string;
-  collaborationType: "prediction" | "analysis" | "community" | "update";
-  tags?: string[];
-}
+// Get all news
+router.get("/", async (req, res) => {
+  const news = await News.find().sort({ publishedAt: -1 });
+  res.json(news);
+});
 
-interface TrackEventBody {
-  authorId: string;
-  eventType: string;
-  eventData: any;
-}
+// Get single news
+router.get("/:id", async (req, res) => {
+  try {
+    const news = await News.findById(req.params.id);
+    if (!news) return res.status(404).json({ error: "News not found" });
+    res.json(news);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-export const newsAuthorRoutes: FastifyPluginAsync = async (fastify) => {
-  // Create author
-  fastify.post<{ Body: CreateAuthorBody }>(
-    '/authors',
-    async (request: FastifyRequest<{ Body: CreateAuthorBody }>, reply: FastifyReply) => {
-      const { id, name, icon, bio, expertise } = request.body;
-      
-      // Your implementation here
-      reply.send({
-        success: true,
-        data: { id, name, icon, bio, expertise }
-      });
-    }
-  );
-
-  // Create collaboration
-  fastify.post<{ Params: CreateCollaborationParams; Body: CreateCollaborationBody }>(
-    '/authors/:id/collaboration',
-    async (
-      request: FastifyRequest<{ Params: CreateCollaborationParams; Body: CreateCollaborationBody }>,
-      reply: FastifyReply
-    ) => {
-      const { id } = request.params;
-      const { title, preview, fullContent, collaborationType, tags } = request.body;
-      
-      // Your implementation here
-      reply.send({
-        success: true,
-        data: { id, title, preview, fullContent, collaborationType, tags }
-      });
-    }
-  );
-
-  // Track event
-  fastify.post<{ Body: TrackEventBody }>(
-    '/authors/track-event',
-    async (request: FastifyRequest<{ Body: TrackEventBody }>, reply: FastifyReply) => {
-      const { authorId, eventType, eventData } = request.body;
-      
-      // Your implementation here
-      reply.send({
-        success: true,
-        data: { authorId, eventType, eventData }
-      });
-    }
-  );
-};
+export default router;
