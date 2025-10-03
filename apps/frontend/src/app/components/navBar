@@ -1,0 +1,16 @@
+<li key={sub.href} className="relative border-b last:border-b-0 group flex justify-between items-center">
+  <Link
+    href={sub.href}
+    className="block px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-700 transition flex-1"
+  >
+    {sub.label}
+  </Link>
+
+  {/* Arrow indicator for submenu */}
+  {sub.submenu && (
+    <span className="text-gray-400 px-2">▶</span>
+  )}
+
+  {/* Nested submenu */}
+  {sub.submenu && <RecursiveMenu items={sub.submenu} />}
+</li>
