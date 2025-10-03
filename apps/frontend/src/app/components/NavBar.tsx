@@ -22,18 +22,46 @@ const navItems: NavItem[] = [
   },
 ];
 
+const quickMenuItems = [
+  { label: '🏠 Home', link: '/' },
+  { label: '📰 News', link: '/news' },
+  { label: '📊 Predictions', link: '/predictions' },
+  { label: '📂 Archive', link: '/archive' },
+  { label: '✍️ Author', link: '/author' },
+];
+
 export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [showHoverMenu, setShowHoverMenu] = useState(false);
 
   return (
     <nav className="bg-[#0a0e1a] text-white shadow-md fixed top-0 w-full z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          {/* Logo */}
-          <div className="flex-shrink-0 flex items-center">
-            <span className="text-green-400 font-bold text-xl cursor-pointer">
+          {/* Logo with Hover Menu */}
+          <div 
+            className="flex-shrink-0 flex items-center relative"
+            onMouseEnter={() => setShowHoverMenu(true)}
+            onMouseLeave={() => setShowHoverMenu(false)}
+          >
+            <a href="/" className="text-green-400 font-bold text-xl cursor-pointer">
               ⚡ Sports Central
-            </span>
+            </a>
+            
+            {/* Hover Menu */}
+            {showHoverMenu && (
+              <div className="absolute left-0 top-full mt-2 bg-[#1f2937] rounded-md shadow-lg overflow-hidden z-50 min-w-[200px]">
+                {quickMenuItems.map((item) => (
+                  <a
+                    key={item.link}
+                    href={item.link}
+                    className="block px-4 py-2 text-sm hover:bg-green-500 hover:text-white transition cursor-pointer"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Menu Items */}
