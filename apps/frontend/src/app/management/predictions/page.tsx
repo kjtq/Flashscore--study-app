@@ -1,39 +1,67 @@
+'use client';
 
-"use client";
-
-import { useState } from 'react';
+import React, { useEffect, useState } from "react";
 
 interface Prediction {
-  id: string;
-  matchup: string;
-  sport: string;
+  matchId: string;
+  homeTeam: string;
+  awayTeam: string;
   prediction: string;
   confidence: number;
-  odds: string;
-  status: 'pending' | 'correct' | 'incorrect' | 'cancelled';
-  matchDate: string;
-  createdBy: string;
-  aiScore: number;
+  league: string;
+  date: string;
 }
 
-export default function PredictionsManagementPage() {
+export default function PredictionsPage() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
+
+  useEffect(() => {
+    async function fetchPredictions() {
+      try {
+        const res = await fetch("/api/predictions");
+        if (!res.ok) return;
+        const data = await res.json();
+        setPredictions(data);
+      } catch (err) {
+        console.error("Prediction fetch failed:", err);
+      }
+    }
+    fetchPredictions();
+  }, []);
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Predictions Management</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-          Create Prediction
-        </button>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <p className="text-gray-600">Predictions management interface</p>
-        <p className="text-sm text-gray-500 mt-2">
-          Use the API at /api/predictions to manage predictions
-        </p>
-      </div>
+      <h1 className="text-2xl font-bold mb-6">AI Predictions 📊</h1>
+      {predictions.length === 0 ? (
+        <p className="text-gray-500">No predictions available.</p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border shadow">
+          <table className="min-w-full bg-white">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-4 py-2 text-left">Match</th>
+                <th className="px-4 py-2">League</th>
+                <th className="px-4 py-2">Date</th>
+                <th className="px-4 py-2">Prediction</th>
+                <th className="px-4 py-2">Confidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              {predictions.map((p) => (
+                <tr key={p.matchId} className="border-b">
+                  <td className="px-4 py-2">
+                    {p.homeTeam} vs {p.awayTeam}
+                  </td>
+                  <td className="px-4 py-2">{p.league}</td>
+                  <td className="px-4 py-2">{p.date}</td>
+                  <td className="px-4 py-2 font-semibold">{p.prediction}</td>
+                  <td className="px-4 py-2">{p.confidence}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
