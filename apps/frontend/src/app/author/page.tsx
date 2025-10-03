@@ -14,7 +14,7 @@ export default function AuthorPage() {
   const [search, setSearch] = useState("");
 
   const filteredArticles = myArticles.filter((a) =>
-    a.title.toLowerCase().includes(search.toLowerCase()),
+    a.title.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -51,9 +51,11 @@ export default function AuthorPage() {
         />
 
         {/* Publish button */}
-        <button className="bg-blue-600 text-white px-4 py-2 rounded mb-4">
-          ➕ Publish New Article
-        </button>
+        <Link href="/author/new">
+          <button className="bg-blue-600 text-white px-4 py-2 rounded mb-4">
+            ➕ Publish New Article
+          </button>
+        </Link>
 
         {/* List of articles */}
         <div className="space-y-3">
