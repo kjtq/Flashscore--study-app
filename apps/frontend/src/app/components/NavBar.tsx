@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import GoogleStyleMenu from './GoogleStyleMenu';
 
 interface NavItem {
   label: string;
@@ -100,6 +101,7 @@ export default function Navbar() {
 
           {/* Right-side quick links / buttons */}
           <div className="flex items-center space-x-4">
+            <GoogleStyleMenu />
             <button className="px-3 py-2 bg-green-500 rounded-full text-sm font-medium hover:bg-green-600 transition cursor-pointer">
               Sign Up
             </button>

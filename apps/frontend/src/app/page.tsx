@@ -4,6 +4,7 @@
 import Link from "next/link";
 import Navbar from "./components/NavBar";
 import IOSInterface from "./components/iOSInterface";
+import AppDrawer from "./components/AppDrawer";
 
 // Mock data (replace with MongoDB later)
 const latestNews = [
@@ -24,15 +25,19 @@ export default function HomePage() {
   return (
     <IOSInterface showStatusBar={true} enableHapticFeedback={true}>
       <div className="min-h-screen bg-gray-100">
+        {/* App Drawer */}
+        <AppDrawer />
+        
         {/* NavBar Component */}
         <Navbar />
 
         {/* Add top padding to account for fixed navbar */}
         <div className="pt-16">
         {/* Welcome Banner */}
-        <div className="p-6 text-center">
+        <div className="p-6 text-center bg-gradient-to-r from-blue-500/10 to-green-500/10 rounded-lg mx-4 mt-4">
           <h2 className="text-3xl font-semibold">Welcome to Sports Central</h2>
           <p className="text-gray-600">Get the latest sports news and predictions in one place.</p>
+          <p className="text-sm text-gray-500 mt-2">Click the apps menu (⋮⋮⋮) in the top right to explore all features</p>
         </div>
 
         {/* Latest News */}
