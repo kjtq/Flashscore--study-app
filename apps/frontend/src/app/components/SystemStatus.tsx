@@ -1,34 +1,69 @@
+"use client";
 
-'use client';
+import { useEffect, useState } from "react";
 
-import React from 'react';
-import { useBackendHealth } from '../hooks/useBackendHealth';
+interface HealthStatus {
+  api: string;
+  db: string;
+  ml: string;
+  uptime: number;
+  timestamp: string;
+}
 
-const SystemStatus: React.FC = () => {
-  const { isHealthy, isLoading, error } = useBackendHealth();
+export default function SystemHealth() {
+  const [status, setStatus] = useState<HealthStatus | null>(null);
+
+  const fetchStatus = () => {
+    fetch("/api/health")
+      .then((res) => res.json())
+      .then(setStatus)
+      .catch(() => setStatus(null));
+  };
+
+  useEffect(() => {
+    fetchStatus();
+
+    // Detect if mobile
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      const interval = setInterval(fetchStatus, 30000); // refresh every 30s
+      return () => clearInterval(interval);
+    }
+  }, []);
+
+  const getColor = (state: string) =>
+    state === "ok" ? "bg-green-500" : "bg-red-500";
+
+  if (!status) return <div className="p-4">Loading system health…</div>;
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <h3 className="text-lg font-semibold mb-2">System Status</h3>
-      <div className="flex items-center space-x-2">
-        <div 
-          className={`w-3 h-3 rounded-full ${
-            isLoading ? 'bg-yellow-500' : 
-            isHealthy ? 'bg-green-500' : 'bg-red-500'
-          }`}
-        />
-        <span className="text-sm">
-          {isLoading ? 'Checking...' : 
-           isHealthy ? 'All systems operational' : 'System issues detected'}
-        </span>
+    <div className="p-4 bg-white shadow rounded-2xl">
+      <h2 className="text-lg font-semibold mb-2">System Health</h2>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="flex items-center space-x-2">
+          <span className={`w-3 h-3 rounded-full ${getColor(status.api)}`} />
+          <span>API</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className={`w-3 h-3 rounded-full ${getColor(status.db)}`} />
+          <span>Database</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className={`w-3 h-3 rounded-full ${getColor(status.ml)}`} />
+          <span>ML Service</span>
+        </div>
       </div>
-      {error && (
-        <p className="text-xs text-red-600 mt-1">
-          Backend: {error.message}
-        </p>
-      )}
+      <p className="text-xs text-gray-500 mt-2">
+        Uptime: {Math.round(status.uptime / 60)} min — Last check:{" "}
+        {new Date(status.timestamp).toLocaleTimeString()}
+      </p>
+      <button
+        onClick={fetchStatus}
+        className="mt-2 px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+      >
+        Refresh Now
+      </button>
     </div>
   );
-};
-
-export default SystemStatus;
+}
