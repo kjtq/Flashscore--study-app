@@ -1,27 +1,19 @@
 import React, { useState } from 'react';
 import GoogleStyleMenu from './GoogleStyleMenu';
 
-interface NavItem {
-  label: string;
-  link?: string;
-  subItems?: { label: string; link: string }[];
-}
+// Map menu item IDs to icons. You can customize/add more as needed!
+const iconMap: Record<string, React.ReactNode> = {
+  home: <FiHome />,
+  news: <FiBookOpen />,
+  predictions: <FiStar />,
+  leaderboard: <FiUsers />,
+  wallet: <FiWallet />,
+  more: <FiMoreHorizontal />,
+};
 
-const navItems: NavItem[] = [
-  { label: 'Home', link: '/' },
-  { label: 'News', link: '/news' },
-  { label: 'Predictions', link: '/predictions' },
-  { label: 'Authors', link: '/authors' },
-  { label: 'Quizzes', link: '/quizzes' },
-  {
-    label: 'More',
-    subItems: [
-      { label: 'Leaderboard', link: '/leaderboard' },
-      { label: 'Pi Wallet', link: '/wallet' },
-      { label: 'Settings', link: '/settings' },
-    ],
-  },
-];
+const NavBar: React.FC = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [submenuOpen, setSubmenuOpen] = useState<string | null>(null);
 
 const quickMenuItems = [
   { label: '🏠 Home', link: '/' },
@@ -88,14 +80,71 @@ export default function Navbar() {
                       <a
                         key={sub.label}
                         href={sub.link}
-                        className="block px-4 py-2 text-sm hover:bg-green-500 hover:text-white transition cursor-pointer"
+                        className="block px-4 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
                       >
-                        {sub.label}
-                      </a>
-                    ))}
-                  </div>
+                        {sub.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+        {/* Mobile Hamburger */}
+        <button
+          className="md:hidden text-2xl text-blue-700 focus:outline-none"
+          onClick={handleMenuToggle}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+        >
+          {menuOpen ? <FiX /> : <FiMenu />}
+        </button>
+      </div>
+      {/* Mobile Menu Drawer */}
+      {menuOpen && (
+        <div className="md:hidden bg-white shadow-lg border-t z-50">
+          <ul className="flex flex-col py-2">
+            {menuItems.map((item) => (
+              <li key={item.id} className="relative">
+                <Link
+                  href={item.link}
+                  className="flex items-center gap-2 px-4 py-3 font-semibold text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {iconMap[item.id] || <FiMoreHorizontal />}
+                  {item.title}
+                </Link>
+                {/* Mobile Submenu */}
+                {item.subMenu && (
+                  <>
+                    <button
+                      className="absolute right-4 top-3 text-gray-400 text-lg"
+                      onClick={() => handleSubmenuToggle(item.id)}
+                      aria-label="Expand submenu"
+                    >
+                      <FiMoreHorizontal />
+                    </button>
+                    {submenuOpen === item.id && (
+                      <ul className="bg-gray-50 border-l ml-8 mt-1 rounded">
+                        {item.subMenu.map((sub) => (
+                          <li key={sub.id}>
+                            <Link
+                              href={sub.link}
+                              className="block px-4 py-2 text-gray-600 hover:bg-blue-100 hover:text-blue-700"
+                              onClick={() => {
+                                setMenuOpen(false);
+                                setSubmenuOpen(null);
+                              }}
+                            >
+                              {sub.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
                 )}
-              </div>
+              </li>
             ))}
           </div>
 
@@ -110,12 +159,9 @@ export default function Navbar() {
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Menu Placeholder */}
-      <div className="md:hidden">
-        {/* You can add a hamburger menu here for mobile */}
-      </div>
+      )}
     </nav>
   );
-}
+};
+
+export default NavBar;
