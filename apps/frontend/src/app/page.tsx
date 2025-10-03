@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import Navbar from "./components/NavBar";
+import IOSInterface from "./components/iOSInterface";
 
 // Mock data (replace with MongoDB later)
 const latestNews = [
@@ -21,12 +22,13 @@ const predictions = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* NavBar Component */}
-      <Navbar />
+    <IOSInterface showStatusBar={true} enableHapticFeedback={true}>
+      <div className="min-h-screen bg-gray-100">
+        {/* NavBar Component */}
+        <Navbar />
 
-      {/* Add top padding to account for fixed navbar */}
-      <div className="pt-16">
+        {/* Add top padding to account for fixed navbar */}
+        <div className="pt-16">
         {/* Welcome Banner */}
         <div className="p-6 text-center">
           <h2 className="text-3xl font-semibold">Welcome to Sports Central</h2>
@@ -67,5 +69,6 @@ export default function HomePage() {
         </section>
       </div>
     </div>
+    </IOSInterface>
   );
 }
