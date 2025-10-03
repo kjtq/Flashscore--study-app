@@ -1,35 +1,27 @@
 // apps/frontend/src/app/layout.tsx
+import "./globals.css";
 import type { Metadata } from "next";
-import "./styles/globals.css";
-import React from "react";
-import { Inter } from "next/font/google";
-
-import BackgroundParticles from "@components/BackgroundParticles";
-import OfflineManager from "@components/OfflineManager";
-import MobileNav from "@components/MobileNav";
-import SidebarNav from "@components/SidebarNav";
-import { navItems } from "./config/navItems";
-
-import NextAuthSessionProvider from "./providers/SessionProvider";
-import ProductionErrorBoundary from "./components/ProductionErrorBoundary";
-import PrivacyNotice from "./components/PrivacyNotice";
-import MobileInstallPrompter from "./components/MobileInstallPrompter";
-import PWAServiceWorker from "./components/PWAServiceWorker";
-// import iOSInterface from "./components/iOSInterface"; // Removed due to DOM prop warnings
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Sports Central - Live Sports Predictions, Scores & Community",
-  description:
-    "Free AI-powered sports predictions for NFL, NBA, MLB, Soccer. Live scores, interactive quizzes, community forum, and earn Pi coins. Join 1000+ sports fans!",
-};
-
-export const viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  title: "Sports Central",
+  description: "Your complete sports prediction and live scores platform",
+  applicationName: "Sports Central",
+  manifest: "/manifest.json",
+  themeColor: "#00ff88",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Sports Central",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icons/icon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -38,52 +30,47 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="light">
+    <html lang="en">
       <head>
-        <link rel="preconnect" href="https://flashstudy-ri0g.onrender.com" />
-        <link rel="dns-prefetch" href="https://flashstudy-ri0g.onrender.com" />
-        <title>{metadata.title}</title>
-        <meta name="description" content={metadata.description} />
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#00ff88" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta
-          name="apple-mobile-web-app-status-bar-style"
-          content="black-translucent"
+        {/* Register service worker for PWA */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('✅ Service Worker registered:', reg))
+                    .catch(err => console.error('❌ Service Worker failed:', err));
+                });
+              }
+            `,
+          }}
         />
-        <meta name="apple-mobile-web-app-title" content="SportsApp" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
-      <body className="relative flex sports">
-        <NextAuthSessionProvider>
-          <ProductionErrorBoundary>
-            {/* iOS interface removed to fix DOM prop warnings */}
-            <React.Suspense fallback={null}>
-              <BackgroundParticles />
-            </React.Suspense>
-
-            <OfflineManager>
-              {/* Sidebar for desktop */}
-              <React.Suspense fallback={null}>
-                <SidebarNav items={navItems} />
-              </React.Suspense>
-
-              {/* Main content area */}
-              <div className="flex-1 min-h-screen flex flex-col">
-                {children}
-
-                {/* Mobile nav (always visible at bottom on small screens) */}
-                <React.Suspense fallback={null}>
-                  <MobileNav items={navItems} />
-                </React.Suspense>
-              </div>
-            </OfflineManager>
-
-            <MobileInstallPrompter />
-            <PWAServiceWorker />
-          </ProductionErrorBoundary>
-        </NextAuthSessionProvider>
-        <PrivacyNotice />
+      <body className="bg-gray-50 text-gray-900">
+        {/* Floating Install Button */}
+        <button
+          id="install-button"
+          style={{
+            display: "none",
+            position: "fixed",
+            bottom: "20px",
+            right: "20px",
+            background: "#00ff88",
+            color: "#1a1f3a",
+            border: "none",
+            padding: "12px 24px",
+            borderRadius: "25px",
+            fontWeight: "bold",
+            fontSize: "16px",
+            boxShadow: "0 4px 12px rgba(0,255,136,0.4)",
+            cursor: "pointer",
+            zIndex: 1000,
+          }}
+        >
+          📲 Install App
+        </button>
+        {children}
       </body>
     </html>
   );
